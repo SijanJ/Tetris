@@ -1,6 +1,7 @@
 #ifndef TETRIS_H_INCLUDED
 #define TETRIS_H_INCLUDED
 
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <string>
@@ -19,6 +20,7 @@ class Tetris
     void setCurrentTime(Uint32 t)
     {
         currentTime =t;
+        currentTime2=t;
     }
 
     bool isRunning()
@@ -33,15 +35,16 @@ class Tetris
     void nextTetrimino();
     void handleEvents();
     void setPosRect(SDL_Rect& rect, int x=0, int y=0, int w=BlockW, int h = BlockH);
+    void moveRectPos(SDL_Rect& rect,int x, int y);
     void gameplay();
     void updateRender();
     void clean();
     int nextT;
 
     private:
-        enum { ScreenW = 720, ScreenH = 800 };
+        enum {ScreenW = 720, ScreenH = 800 };
         enum {BlockW = 36, BlockH = 36};
-        enum { Lines = 20, Cols = 22};
+        enum {Lines = 20, Cols = 22};
         SDL_Window* window = NULL;
 	SDL_Renderer* render = NULL;
 	SDL_Texture* background = NULL, * blocks = NULL;
@@ -58,8 +61,8 @@ class Tetris
      int dx2=0;
      bool rotate =false;
      bool rotate2 = false;
-     unsigned int delay = 300;
-     Uint32 startTime=0, currentTime =0;
+     unsigned int delay = 300,delay2=300;
+     Uint32 startTime=0, currentTime =0,currentTime2=0,startTime2=0;
 
 };
 

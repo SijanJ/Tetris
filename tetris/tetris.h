@@ -42,9 +42,9 @@ class Tetris
     int nextT;
 
     private:
-        enum {ScreenW = 720, ScreenH = 800 };
+        enum {ScreenW = 864, ScreenH = 800 };
         enum {BlockW = 36, BlockH = 36};
-        enum {Lines = 20, Cols = 22};
+        enum {Lines = 20, Cols = 24};
         SDL_Window* window = NULL;
 	SDL_Renderer* render = NULL;
 	SDL_Texture* background = NULL, * blocks = NULL;

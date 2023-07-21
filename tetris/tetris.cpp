@@ -34,6 +34,7 @@
                 blocks = SDL_CreateTextureFromSurface(render, loadSurf);
                 SDL_FreeSurface(loadSurf);
                 nextTetrimino();
+
              }
          }
          else
@@ -53,11 +54,11 @@
         {
 
             if(nextT==2){
-                 items2[i].x = 10 + figures[n][i]% 4;
+                 items2[i].x = 16 + figures[n][i]% 4;
             items2[i].y = int(figures[n][i]/4);
             }
             else{
-            items[i].x = figures[n][i]% 4;
+            items[i].x = 4 + figures[n][i]% 4;
             items[i].y = int(figures[n][i]/4);
             }
 
@@ -66,6 +67,7 @@
 
     void Tetris::handleEvents()
     {
+
     SDL_Event e;
     while(SDL_PollEvent(&e))
     {
@@ -126,7 +128,7 @@
 
         for(int i=0; i<4; i++)
 
-            if(items[i].x < 0 || items[i].x >=10 || items[i].y >= Lines)
+            if(items[i].x < 1 || items[i].x >=11 || items[i].y >= Lines)
                 return false;
             else if (field[items[i].y][items[i].x])
                 return false;
@@ -139,7 +141,7 @@
 
 
 
-        if(items2[i].x < 10 || items2[i].x >=20 || items2[i].y >= Lines)
+        if(items2[i].x < 13 || items2[i].x >=23 || items2[i].y >= Lines)
                 return false;
             else if (field[items2[i].y][items2[i].x])
                 return false;
@@ -153,6 +155,7 @@
     {
 
     SDL_RenderCopy(render, background, NULL, NULL);
+
     //backup
     for(int i=0; i<4; i++){
       backup[i]=items[i];
@@ -227,6 +230,7 @@
             items[i].y++;
 
 
+
         }
         if(!isvalid())
         {
@@ -240,7 +244,7 @@
         startTime = currentTime;
     }
 
-   if(currentTime2 - startTime2 > delay2)
+  if(currentTime2 - startTime2 > delay2)
     {
 
         for(int i=0;i<4;i++){
@@ -267,12 +271,23 @@
     int k =Lines - 1;
     for(int i =k;i>0;i--){
         int count=0;
-        for(int j=0;j<Cols;j++){
+        for(int j=1;j<11;j++){
             if(field[i][j])
                 count++;
             field[k][j]=field[i][j];
         }
-        if(count<Cols)
+        if(count<10)
+            k--;
+    }
+    k= Lines -1;
+    for(int i =k; i>0; i--){
+        int count =0;
+        for (int j=13; j<(13 +10); j++){
+            if(field[i][j])
+                count ++;
+            field[k][j]=field[i][j];
+        }
+        if(count<10)
             k--;
     }
 
@@ -284,6 +299,7 @@
 
 
     ////////render
+
     for(int i=0; i<Lines ; i++)
         for(int j=0; j < Cols; j++)
         if(field[i][j])
@@ -297,6 +313,7 @@
     {
         setPosRect(srcR, color *  BlockW);
         setPosRect(destR, items[i].x* BlockW, items[i].y*BlockH);
+
         SDL_RenderCopy(render,blocks, &srcR, &destR);
     }
 
@@ -320,6 +337,7 @@
         setPosRect(destR, items2[j].x* BlockH, items2[j].y*BlockH);
         SDL_RenderCopy(render,blocks, &srcR, &destR);
     }
+
 
 SDL_RenderPresent(render);
 

@@ -1,8 +1,15 @@
+
 #include "tetris.h"
 #include<iostream>
+#include<cstdlib>
+#include<ctime>
 using namespace std;
+
+
+
 int main(int argc, char *argv[] )
 {
+srand(time(0));
 Tetris* tetris = new Tetris();
 
 const char* title = "Tetris";
@@ -20,4 +27,5 @@ else{
     cout << "Failed initialization";
 }
 tetris ->clean();
+return 0;
 }

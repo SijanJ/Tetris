@@ -73,8 +73,6 @@ bool Tetris::init(const char* title)
 }
 void Tetris::nextTetrimino()
 {
-    color = 1 + rand() %7;
-    color2 = 1 + rand() %7;
     int n = rand() % 7;
 
     for (int i= 0; i<4; i++)
@@ -278,6 +276,7 @@ void Tetris::gameplay()
                 field[backup[i].y][backup[i].x]=color;
             }
             nextT=1;
+            color = 1 + rand()%7;
             nextTetrimino();
         }
 
@@ -305,6 +304,7 @@ void Tetris::gameplay()
                 field[backup2[i].y][backup2[i].x]=color2;
             }
             nextT=2;
+            color2 = 1 + rand()%7;
             nextTetrimino();
         }
         startTime2 = currentTime2;

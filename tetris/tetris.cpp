@@ -52,6 +52,7 @@ bool Tetris::init(const char* title)
                     // Handle the error or return.
                 }
 
+
                 nextTetrimino();
 
             }
@@ -84,6 +85,7 @@ void Tetris::nextTetrimino()
         }
 
     }
+
 }
 
 void Tetris::handleEvents()
@@ -184,6 +186,9 @@ void Tetris::hardDrop()
         increasePlayer1Level(linesCleared1);
     }
 
+    showShadow();
+
+
 }
 
 void Tetris::hardDrop2()
@@ -221,8 +226,40 @@ void Tetris::hardDrop2()
     {
         increasePlayer2Level(linesCleared2);
     }
+
+    showShadow2();
+}
+bool Tetris::isShadowValid(const Point shadowItems[4])
+{
+    for (int i = 0; i < 4; i++)
+    {
+        if (shadowItems[i].x < 1 || shadowItems[i].x >= 11 || shadowItems[i].y >= Lines)
+        {
+            return false;
+        }
+        else if (field[shadowItems[i].y][shadowItems[i].x])
+        {
+            return false;
+        }
+    }
+    return true;
 }
 
+bool Tetris::isShadowValid2(const Point shadowItems2[4])
+{
+    for (int i = 0; i < 4; i++)
+    {
+        if (shadowItems2[i].x < 13 || shadowItems[i].x >= 23 || shadowItems[i].y >= Lines)
+        {
+            return false;
+        }
+        else if (field[shadowItems2[i].y][shadowItems2[i].x])
+        {
+            return false;
+        }
+    }
+    return true;
+}
 bool Tetris::isvalid()
 {
 
@@ -243,18 +280,64 @@ bool Tetris::isvalid2()
     for(int i=0; i<4; i++)
     {
         if(items2[i].x < 13 || items2[i].x >=23 || items2[i].y >= Lines)
+        {
+
             return false;
+        }
         else if (field[items2[i].y][items2[i].x])
+        {
+
             return false;
+        }
     }
     return true;
 
 }
 
+void Tetris::showShadow()
+{
+// Calculate the shadow positions
+    for (int i = 0; i < 4; i++)
+    {
+        shadowItems[i] = items[i];
+    }
+    while (isShadowValid(shadowItems))
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            shadowItems[i].y++;
+        }
+    }
+    for (int i = 0; i < 4; i++)
+    {
+        shadowItems[i].y--;
+    }
+}
+void Tetris::showShadow2()
+{
+    // Calculate the shadow positions
+    for (int i = 0; i < 4; i++)
+    {
+        shadowItems2[i] = items2[i];
+    }
+    while (isShadowValid2(shadowItems2))
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            shadowItems2[i].y++;
+        }
+    }
+    for (int i = 0; i < 4; i++)
+    {
+        shadowItems2[i].y--;
+    }
+}
 
 
 void Tetris::gameplay()
 {
+    showShadow();
+    showShadow2();
     //backup
     for(int i=0; i<4; i++)
     {
@@ -273,6 +356,7 @@ void Tetris::gameplay()
         if(!isvalid())
             for(int i=0; i<4; i++)
                 items[i]=backup[i];
+
     }
     if(dx2)
     {
@@ -287,6 +371,7 @@ void Tetris::gameplay()
         if(!isvalid2())
             for(int i=0; i<4; i++)
                 items2[i]=backup2[i];
+
     }
 
     //Rotate the tetriminos
@@ -303,6 +388,7 @@ void Tetris::gameplay()
         if(!isvalid())
             for(int i=0; i<4; i++)
                 items[i]=backup[i];
+
     }
     if(rotate2)
     {
@@ -317,6 +403,7 @@ void Tetris::gameplay()
         if(!isvalid2())
             for(int i=0; i<4; i++)
                 items2[i]=backup2[i];
+
     }
 
     nextT =1;
@@ -404,6 +491,8 @@ void Tetris::gameplay()
     {
         increasePlayer2Level(linesCleared2);
     }
+
+
 
     //Reset the Tetriminos and update speed of tetriminos according to level
     dx=0;
@@ -616,6 +705,18 @@ void Tetris::drawScores()
 void Tetris::updateRender()
 {
     SDL_RenderCopy(render, background, NULL, NULL);
+    for (int j = 0; j < 4; j++)
+    {
+        setPosRect(srcR, color * BlockW);
+        setPosRect(destR, shadowItems[j].x * BlockW, shadowItems[j].y * BlockH);
+
+
+        SDL_SetTextureAlphaMod(blocks, 50); //
+        SDL_RenderCopy(render, blocks, &srcR, &destR);
+
+        // Restore full alpha for subsequent rendering
+        SDL_SetTextureAlphaMod(blocks, 255); // Set alpha to 255 (fully opaque)
+    }
     for(int i=0; i<Lines ; i++)
         for(int j=0; j < Cols; j++)
             if(field[i][j])
@@ -633,7 +734,18 @@ void Tetris::updateRender()
         SDL_RenderCopy(render,blocks, &srcR, &destR);
     }
 
+    for (int j = 0; j < 4; j++)
+    {
+        setPosRect(srcR, color2 * BlockW);
+        setPosRect(destR, shadowItems2[j].x * BlockW, shadowItems2[j].y * BlockH);
 
+
+        SDL_SetTextureAlphaMod(blocks, 50); //
+        SDL_RenderCopy(render, blocks, &srcR, &destR);
+
+        // Restore full alpha for subsequent rendering
+        SDL_SetTextureAlphaMod(blocks, 255); // Set alpha to 255 (fully opaque)
+    }
 
     field[0][0]=0;
     for(int i=0; i<Lines ; i++)
@@ -675,3 +787,4 @@ void Tetris::clean()
     IMG_Quit();
     TTF_Quit();
 }
+

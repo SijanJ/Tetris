@@ -13,7 +13,6 @@ class Tetris
 public:
     Tetris()
     {
-
     }
     ~Tetris()
     {
@@ -72,7 +71,7 @@ private:
     struct Point
     {
         int x,y;
-    } items[4],backup[4], items2[4], backup2[4];
+    } items[4],backup[4], items2[4], backup2[4], shadowItems[4], shadowItems2[4];
 
     int color =1,color2=2;
     int dx =0;
@@ -95,6 +94,10 @@ private:
     void increasePlayer1Level(int linesCleared);
     void increasePlayer2Level(int linesCleared);
     void drawScores();
+    void showShadow();
+    void showShadow2();
+    bool isShadowValid(const Point shadowItems[4]);
+    bool isShadowValid2(const Point shadowItems2[4]);
     Uint32 startTime=0, currentTime =0,currentTime2=0,startTime2=0;
 
 };

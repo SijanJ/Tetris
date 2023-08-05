@@ -8,7 +8,7 @@ const int Tetris::figures[][4]=
     1,2,5,6,
     2,1,5,4,
     1,4,5,6,
-    0,1,5,6,
+    0,1,5,6
 
 };
 
@@ -45,19 +45,13 @@ bool Tetris::init(const char* title)
                 loadSurf = IMG_Load("images/blocks.png");
                 blocks = SDL_CreateTextureFromSurface(render, loadSurf);
                 SDL_FreeSurface(loadSurf);
+                font = TTF_OpenFont("Font/Tetris.ttf", 24);
+                if (!font)
+                {
+                    std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
+                    // Handle the error or return.
+                }
 
-
-
-
-                loadSurf = TTF_RenderText_Solid(font,"SCORE:",textColor );
-                text = SDL_CreateTextureFromSurface(render, loadSurf);
-                SDL_Rect textRect;
-                textRect.w=textRect.h=0;
-                textRect.x = 5;
-                textRect.y = -5;
-                SDL_QueryTexture(text,NULL,NULL,&textRect.w,&textRect.h);
-
-                SDL_FreeSurface(loadSurf);
                 nextTetrimino();
 
             }
@@ -81,7 +75,7 @@ void Tetris::nextTetrimino()
         if(nextT==2)
         {
             items2[i].x = 16 + figures[n][i]% 4;
-            items2[i].y = int(figures[n][i]/4);
+            items2[i].y = 1+int(figures[n][i]/4);
         }
         else
         {
@@ -120,6 +114,9 @@ void Tetris::handleEvents()
             case SDLK_DOWN:
                 delay2 = 50;
                 break;
+            case SDLK_RSHIFT:
+                hardDrop2();
+                break;
             case SDLK_w:
                 rotate = true;
                 break;
@@ -131,6 +128,9 @@ void Tetris::handleEvents()
                 break;
             case SDLK_s:
                 delay = 50;
+                break;
+            case SDLK_LSHIFT:
+                hardDrop();
                 break;
             }
         }
@@ -153,28 +153,100 @@ void Tetris::moveRectPos(SDL_Rect& rect, int x, int y)
     rect.y+=y;
 }
 
+void Tetris::hardDrop()
+{
+    while(isvalid())
+    {
+        for(int i=0; i<4; i++)
+        {
+            items[i].y++;
+        }
+    }
+    for (int i = 0; i < 4; i++)
+    {
+        items[i].y--;
+    }
+
+    // Place the tetrimino in its final position
+    for (int i = 0; i < 4; i++)
+    {
+        field[items[i].y][items[i].x] = color;
+    }
+    // Generate the next tetrimino for Player 1
+    nextT = 1;
+    color = 1 + rand() % 7;
+    nextTetrimino();
+
+    int linesCleared1 = clearLines();
+    increasePlayer1Score(linesCleared1);
+    if (tempDelay > 100)
+    {
+        increasePlayer1Level(linesCleared1);
+    }
+
+}
+
+void Tetris::hardDrop2()
+{
+// Move the tetrimino down until it collides with another block or the bottom
+    while (isvalid2())
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            items2[i].y++;
+        }
+    }
+
+    // Move the tetrimino back up to its last valid position
+    for (int i = 0; i < 4; i++)
+    {
+        items2[i].y--;
+    }
+
+    // Place the tetrimino in its final position
+    for (int i = 0; i < 4; i++)
+    {
+        field[items2[i].y][items2[i].x] = color2;
+    }
+
+    // Generate the next tetrimino for Player 2
+    nextT = 2;
+    color2 = 1 + rand() % 7;
+    nextTetrimino();
+
+    // Update the score and level for Player 2
+    linesCleared2 = clearLines2(); // You need to implement the clearLines2 function
+    increasePlayer2Score(linesCleared2);
+    if (tempDelay2 > 100)
+    {
+        increasePlayer2Level(linesCleared2);
+    }
+}
+
 bool Tetris::isvalid()
 {
 
     for(int i=0; i<4; i++)
+    {
+
 
         if(items[i].x < 1 || items[i].x >=11 || items[i].y >= Lines)
             return false;
         else if (field[items[i].y][items[i].x])
             return false;
+    }
     return true;
 }
 
 bool Tetris::isvalid2()
 {
     for(int i=0; i<4; i++)
-
-
-
+    {
         if(items2[i].x < 13 || items2[i].x >=23 || items2[i].y >= Lines)
             return false;
         else if (field[items2[i].y][items2[i].x])
             return false;
+    }
     return true;
 
 }
@@ -183,10 +255,6 @@ bool Tetris::isvalid2()
 
 void Tetris::gameplay()
 {
-
-    SDL_RenderCopy(render, background, NULL, NULL);
-    SDL_RenderCopy(render, text, NULL, &textRect);
-
     //backup
     for(int i=0; i<4; i++)
     {
@@ -194,7 +262,8 @@ void Tetris::gameplay()
         backup2[i]=items2[i];
     }
 
-    //Move the tetrominos
+
+    //Move the tetriminos
     if(dx)
     {
         for(int i=0; i<4; i++)
@@ -266,9 +335,8 @@ void Tetris::gameplay()
         {
             items[i].y++;
 
-
-
         }
+
         if(!isvalid())
         {
             for(int i=0; i<4; i++)
@@ -279,6 +347,7 @@ void Tetris::gameplay()
             color = 1 + rand()%7;
             nextTetrimino();
         }
+
 
         startTime = currentTime;
     }
@@ -292,10 +361,9 @@ void Tetris::gameplay()
         }
         for (int i=0; i<4 ; i++)
         {
-
             items2[i].y++;
-
         }
+
 
         if(!isvalid2())
         {
@@ -306,16 +374,60 @@ void Tetris::gameplay()
             nextT=2;
             color2 = 1 + rand()%7;
             nextTetrimino();
+
         }
+
         startTime2 = currentTime2;
     }
 
     //Check Lines
 
 
-    int linesCleared1 = 0;
+    linesCleared=0;
+
+    linesCleared=clearLines();
+    // Update Player 1's score based on the number of lines cleared.
+    increasePlayer1Score(linesCleared);
+    if (tempDelay > 100)
+    {
+        increasePlayer1Level(linesCleared);
+    }
+
+
+    // Check if any lines are completed and update the scores accordingly for Player 2.
+    linesCleared2 = 0;
+
+    linesCleared2 = clearLines2();
+    // Update Player 2's score based on the number of lines cleared.
+    increasePlayer2Score(linesCleared2);
+    if (tempDelay2 > 100)
+    {
+        increasePlayer2Level(linesCleared2);
+    }
+
+    //Reset the Tetriminos and update speed of tetriminos according to level
+    dx=0;
+    rotate = false;
+    delay=tempDelay;
+
+    dx2=0;
+    rotate2= false;
+    delay2=tempDelay2;
+
+
+
+
+    updateRender();
+}
+
+
+
+int Tetris::clearLines()
+{
+    linesCleared=0;
     for (int i = 0; i < Lines; i++)
     {
+
         bool lineComplete = true;
         for (int j = 1; j < 11; j++)
         {
@@ -328,7 +440,7 @@ void Tetris::gameplay()
 
         if (lineComplete)
         {
-            linesCleared1++;
+            linesCleared++;
             // Clear the line and shift other lines down.
             for (int k = i; k > 0; k--)
             {
@@ -344,17 +456,11 @@ void Tetris::gameplay()
             }
         }
     }
+    return linesCleared;
+}
 
-    // Update Player 1's score based on the number of lines cleared.
-    increasePlayer1Score(linesCleared1);
-    if (tempDelay > 100)
-    {
-        increasePlayer1Level(linesCleared1);
-    }
-
-
-    // Check if any lines are completed and update the scores accordingly for Player 2.
-    int linesCleared2 = 0;
+int Tetris::clearLines2()
+{
     for (int i = 2; i < Lines; i++)
     {
         bool lineComplete = true;
@@ -385,28 +491,8 @@ void Tetris::gameplay()
             }
         }
     }
-
-    // Update Player 2's score based on the number of lines cleared.
-    increasePlayer2Score(linesCleared2);
-    if (tempDelay2 > 100)
-    {
-        increasePlayer2Level(linesCleared2);
-    }
-
-    //Reset the Tetriminos adn update speed of tetrominos according o level
-    dx=0;
-    rotate = false;
-    delay=tempDelay;
-
-    dx2=0;
-    rotate2= false;
-    delay2=tempDelay2;
-
-    updateRender();
-
-
+    return linesCleared2;
 }
-
 
 void Tetris::increasePlayer1Score(int Cleared)
 {
@@ -449,12 +535,7 @@ void Tetris::increasePlayer2Level(int Cleared)
 
 void Tetris::drawScores()
 {
-    font = TTF_OpenFont("Font/Tetris.ttf", 24);
-    if (!font)
-    {
-        std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
-        // Handle the error or return.
-    }
+
 
     // Render the score for Player 1
     std::string player1ScoreText = "Player 1 Score: " + std::to_string(player1Score);
@@ -462,7 +543,6 @@ void Tetris::drawScores()
     SDL_Texture* player1ScoreTexture = SDL_CreateTextureFromSurface(render, player1ScoreSurface);
 
     // Set the position of Player 1's score text
-    SDL_Rect player1ScoreRect;
     player1ScoreRect.x = 10;
     player1ScoreRect.y = 10;
     player1ScoreRect.w = player1ScoreSurface->w;
@@ -481,7 +561,7 @@ void Tetris::drawScores()
     SDL_Texture* player2ScoreTexture = SDL_CreateTextureFromSurface(render, player2ScoreSurface);
 
     // Set the position of Player 2's score text
-    SDL_Rect player2ScoreRect;
+
     player2ScoreRect.x = 500;
     player2ScoreRect.y = 10;
     player2ScoreRect.w = player2ScoreSurface->w;
@@ -500,7 +580,7 @@ void Tetris::drawScores()
     SDL_Texture* player1LevelTexture = SDL_CreateTextureFromSurface(render, player1LevelSurface);
 
     // Set the position of player 1's Level Text
-    SDL_Rect player1LevelRect;
+
     player1LevelRect.x = 10;
     player1LevelRect.y = 50;
     player1LevelRect.w = player1LevelSurface->w;
@@ -519,7 +599,7 @@ void Tetris::drawScores()
     SDL_Texture* player2LevelTexture = SDL_CreateTextureFromSurface(render, player2LevelSurface);
 
     // Set the position of player 2's Level Text
-    SDL_Rect player2LevelRect;
+
     player2LevelRect.x = 500;
     player2LevelRect.y = 50;
     player2LevelRect.w = player2LevelSurface->w;
@@ -532,8 +612,10 @@ void Tetris::drawScores()
     SDL_FreeSurface(player2LevelSurface);
     SDL_DestroyTexture(player2LevelTexture);
 }
+
 void Tetris::updateRender()
 {
+    SDL_RenderCopy(render, background, NULL, NULL);
     for(int i=0; i<Lines ; i++)
         for(int j=0; j < Cols; j++)
             if(field[i][j])
@@ -541,7 +623,6 @@ void Tetris::updateRender()
                 setPosRect(srcR, field[i][j] * BlockW);
                 setPosRect(destR, j*BlockW, i*BlockH);
                 SDL_RenderCopy(render, blocks, &srcR, &destR );
-                SDL_RenderCopy(render, text, NULL, &textRect);
             }
 
     for(int i=0; i<4; i++)
@@ -550,8 +631,9 @@ void Tetris::updateRender()
         setPosRect(destR, items[i].x* BlockW, items[i].y*BlockH);
 
         SDL_RenderCopy(render,blocks, &srcR, &destR);
-        SDL_RenderCopy(render, text, NULL, &textRect);
     }
+
+
 
     field[0][0]=0;
     for(int i=0; i<Lines ; i++)
@@ -570,7 +652,9 @@ void Tetris::updateRender()
         SDL_RenderCopy(render,blocks, &srcR, &destR);
     }
 
+
     drawScores();
+
 
     SDL_RenderPresent(render);
 
@@ -580,11 +664,14 @@ void Tetris::clean()
 {
     SDL_DestroyTexture(blocks);
     SDL_DestroyTexture(background);
-    SDL_DestroyTexture(text);
+
     // Close the font after use
     TTF_CloseFont(font);
 
+
     SDL_DestroyRenderer(render);
+    SDL_DestroyWindow(window);
+
     IMG_Quit();
     TTF_Quit();
 }

@@ -22,8 +22,8 @@ public:
 
     void setCurrentTime(Uint32 t)
     {
-        currentTime =t;
-        currentTime2=t;
+        currentTime[1] =t;
+        currentTime[2]=t;
     }
 
     bool isRunning()
@@ -31,23 +31,21 @@ public:
         return running;
     }
 
-    bool isvalid();
-    bool isvalid2();
+    bool isvalid(int player);
+
 
     bool init(const char* title);
-    void nextTetrimino(bool differentShape = false);
-    void nextTetrimino2();
+    void nextTetrimino(int player_no, bool differentShape = false);
     void handleEvents();
     void setPosRect(SDL_Rect& rect, int x=0, int y=0, int w=BlockW, int h = BlockH);
     void moveRectPos(SDL_Rect& rect,int x, int y);
     void gameplay();
     void updateRender();
     void clean();
-    void hardDrop();
-    void hardDrop2();
-    int nextT;
-    int clearLines();
-    int clearLines2();
+    void hardDrop(int player);
+    int clearLines(int player);
+    int total_player;
+    int player[3];
 
 private:
     enum {ScreenW = 864, ScreenH = 800 };
@@ -73,41 +71,33 @@ private:
     struct Point
     {
         int x,y;
-    } items[8],backup[8], items2[8], backup2[8], shadowItems[8], shadowItems2[8];
+    } items[3][8],backup[3][8],shadowItems[3][8];
 
-    int color =1,color2=2;
-    int dx =0;
-    int dx2=0;
-    int n;
-    bool rotate =false;
-    bool rotate2 = false;
-    unsigned int delay=1000,delay2=1000;
-    unsigned int tempDelay=1000, tempDelay2=1000;
+    int color[3] = {1,3,4};
+    int dx[3] ={0};
+    int n[3];
+    bool rotate[3] ={false};
+    unsigned int delay[3] = {1000,1000,1000};
 
-    int player1Score = 0; // Score for player 1
-    int player2Score = 0; // Score for player 2
-    int linesCleared = 0;
-    int linesCleared2 = 0;
-    int player1Level=0;
-    int player2Level=0;
+    unsigned int tempDelay[3]={1000,1000,1000};
+
+    int playerScore[3] = {0,0,0}; // Score for player 1
+    int linesCleared[3] = {0};
+    int playerLevel[3]={0};
     std::string player2LevelText;
     std::string player1LevelText;
 
-    int powerup_x,powerup_y,powerup_x2,powerup_y2 ;
-    int powerupStartTime, powerupStartTime2;
-    bool isPowerupActive = true,startPowerup = true, startPowerup2 = true,isPowerupActive2 = true;
+    int powerup_x[3],powerup_y[3];
+    int powerupStartTime[3];
+    bool isPowerupActive[3] = {true, true, true},startPowerup[3] = {true, true, true};
 
-    void increasePlayer1Score(int linesCleared);
-    void increasePlayer2Score(int linesCleared);
-    void increasePlayer1Level(int linesCleared);
-    void increasePlayer2Level(int linesCleared);
+    void increasePlayerScore(int player, int linesCleared);
+    void increasePlayerLevel(int player, int linesCleared);
     void drawScores();
-    void showShadow();
-    void showShadow2();
-    bool isShadowValid(const Point shadowItems[8]);
-    bool isShadowValid2(const Point shadowItems2[8]);
+    void showShadow(int player);
+    bool isShadowValid(int player, const Point shadowItems[3][8]);
     void powerup(int player_no, int powerup_no);
-    Uint32 startTime=0, currentTime =0,currentTime2=0,startTime2=0;
+    Uint32 startTime[3]={0}, currentTime[3] ={0};
 
 };
 

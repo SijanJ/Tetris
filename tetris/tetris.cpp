@@ -4,7 +4,7 @@
 
 const int Tetris::figures[][8]=
 {
-    0,1,2,3,0,1,2,3,
+    4,5,6,7,4,5,6,7,
     0,4,5,6,0,4,5,6,
     2,6,5,4,2,6,5,4,
     1,2,5,6,1,2,5,6,
@@ -61,9 +61,10 @@ bool Tetris::init(const char* title)
                 powerup_img = SDL_CreateTextureFromSurface(render, loadSurf);
                 SDL_FreeSurface(loadSurf);
 
-                nextTetrimino();
-                nextT = 2;
-                nextTetrimino();
+               total_player=2;
+
+                nextTetrimino(1);
+                nextTetrimino(2);
 
 
             }
@@ -77,27 +78,36 @@ bool Tetris::init(const char* title)
     running = true;
     return true;
 }
-void Tetris::nextTetrimino(bool differentShape)
+void Tetris::nextTetrimino(int player, bool differentShape)
 {
     if(differentShape == true)
     {
-     n = 7 + rand()%2;
+     n[player]= 7 + rand()%2;
+     color[player] = 8;
     }
     else
-    n = rand() % 7;
+    {
+    n[player] = rand() % 7;
+    color[player] = 1 + n[player];
+    }
+
+
 
     for (int i= 0; i<8; i++)
     {
 
-        if(nextT==2)
+        if(player==2)
         {
-            items2[i].x = 16 + figures[n][i]% 4;
-            items2[i].y = 1+int(figures[n][i]/4);
+            items[2][i].x = 16 + figures[n[2]][i]% 4;
+            items[2][i].y = int(figures[n[2]][i]/4);
+
         }
         else
         {
-            items[i].x = 4 + figures[n][i]% 4;
-            items[i].y = int(figures[n][i]/4);
+
+            items[1][i].x = 4 + figures[n[1]][i]% 4;
+            items[1][i].y = int(figures[n[1]][i]/4);
+
         }
 
     }
@@ -121,44 +131,44 @@ void Tetris::handleEvents()
             switch(e.key.keysym.sym)
             {
             case SDLK_UP:
-                rotate2 = true;
+                rotate[2] = true;
                 break;
             case SDLK_LEFT:
-                dx2 = -1;
+                dx[2] = -1;
                 break;
             case SDLK_RIGHT:
-                dx2 = 1;
+                dx[2] = 1;
                 break;
             case SDLK_DOWN:
-                delay2 = 50;
+                delay[2] = 50;
                 break;
             case SDLK_RSHIFT:
-                hardDrop2();
+                hardDrop(2);
                 break;
             case SDLK_w:
-                rotate = true;
+                rotate[1] = true;
                 break;
             case SDLK_a:
-                dx = -1;
+                dx[1] = -1;
                 break;
             case SDLK_d:
-                dx = 1;
+                dx[1] = 1;
                 break;
             case SDLK_s:
-                delay = 50;
+                delay[1] = 50;
                 break;
             case SDLK_LSHIFT:
-                hardDrop();
+                hardDrop(1);
                 break;
             }
         }
     }
     const Uint8* state =SDL_GetKeyboardState(NULL);
     if(state[SDL_SCANCODE_DOWN])
-        delay2=50;
+        delay[2]=50;
 
     if(state[SDL_SCANCODE_S])
-        delay=50;
+        delay[1]=50;
 }
 void Tetris::setPosRect(SDL_Rect& rect, int x, int y, int w, int h)
 {
@@ -171,181 +181,136 @@ void Tetris::moveRectPos(SDL_Rect& rect, int x, int y)
     rect.y+=y;
 }
 
-void Tetris::hardDrop()
+void Tetris::hardDrop(int player)
 {
-    while(isvalid())
+    while(isvalid(player))
     {
         for(int i=0; i<8; i++)
         {
-            items[i].y++;
+            items[player][i].y++;
         }
     }
     for (int i = 0; i < 8; i++)
     {
-        items[i].y--;
+        items[player][i].y--;
     }
 
     // Place the tetrimino in its final position
     for (int i = 0; i < 8; i++)
     {
-        field[items[i].y][items[i].x] = color;
+        field[items[player][i].y][items[player][i].x] = color[player];
     }
     // Generate the next tetrimino for Player 1
-    nextT = 1;
-    color = 1 + rand() % 7;
-    nextTetrimino();
 
-    int linesCleared1 = clearLines();
-    increasePlayer1Score(linesCleared1);
-    if (tempDelay > 100)
+    color[player] = 1 + rand() % 7;
+    nextTetrimino(player);
+    int linesCleared[3];
+    linesCleared[player] = clearLines(player);
+    increasePlayerScore(player, linesCleared[player]);
+    if (tempDelay[player] > 100)
     {
-        increasePlayer1Level(linesCleared1);
+        increasePlayerLevel(player, linesCleared[player]);
     }
 
-    showShadow();
+    showShadow(player);
 
 
 }
 
-void Tetris::hardDrop2()
-{
-// Move the tetrimino down until it collides with another block or the bottom
-    while (isvalid2())
-    {
-        for (int i = 0; i < 8; i++)
-        {
-            items2[i].y++;
-        }
-    }
 
-    // Move the tetrimino back up to its last valid position
-    for (int i = 0; i < 8; i++)
-    {
-        items2[i].y--;
-    }
-
-    // Place the tetrimino in its final position
-    for (int i = 0; i < 8; i++)
-    {
-        field[items2[i].y][items2[i].x] = color2;
-    }
-
-    // Generate the next tetrimino for Player 2
-    nextT = 2;
-    color2 = 1 + rand() % 7;
-    nextTetrimino();
-
-    // Update the score and level for Player 2
-    linesCleared2 = clearLines2(); // You need to implement the clearLines2 function
-    increasePlayer2Score(linesCleared2);
-    if (tempDelay2 > 100)
-    {
-        increasePlayer2Level(linesCleared2);
-    }
-
-    showShadow2();
-}
-bool Tetris::isShadowValid(const Point shadowItems[8])
+bool Tetris::isShadowValid(int player, const Point shadowItems[3][8])
 {
     for (int i = 0; i < 8; i++)
     {
-        if (shadowItems[i].x < 1 || shadowItems[i].x >= 11 || shadowItems[i].y >= Lines)
+        if(player==1)
+        {
+        if (shadowItems[1][i].x < 1 || shadowItems[1][i].x >= 11 || shadowItems[1][i].y >= Lines)
         {
             return false;
         }
-        else if (field[shadowItems[i].y][shadowItems[i].x])
+        else if (field[shadowItems[1][i].y][shadowItems[1][i].x])
         {
             return false;
         }
+        }
+
+        else
+        {
+        if (shadowItems[2][i].x < 13 || shadowItems[2][i].x >= 23 || shadowItems[2][i].y >= Lines)
+        {
+            return false;
+        }
+        else if (field[shadowItems[2][i].y][shadowItems[2][i].x])
+        {
+            return false;
+        }
+        }
+
     }
     return true;
 }
 
-bool Tetris::isShadowValid2(const Point shadowItems2[8])
+bool Tetris::isvalid(int player)
 {
-    for (int i = 0; i < 8; i++)
-    {
-        if (shadowItems2[i].x < 13 || shadowItems[i].x >= 23 || shadowItems[i].y >= Lines)
-        {
-            return false;
-        }
-        else if (field[shadowItems2[i].y][shadowItems2[i].x])
-        {
-            return false;
-        }
-    }
-    return true;
-}
-bool Tetris::isvalid()
-{
-
-    for(int i=0; i<8; i++)
-    {
-
-
-        if(items[i].x < 1 || items[i].x >=11 || items[i].y >= Lines)
-            return false;
-        else if (field[items[i].y][items[i].x])
-            return false;
-    }
-    return true;
-}
-
-bool Tetris::isvalid2()
+if(player==1)
 {
     for(int i=0; i<8; i++)
     {
-        if(items2[i].x < 13 || items2[i].x >=23 || items2[i].y >= Lines)
-        {
-
+        if(items[1][i].x < 1 || items[1][i].x >=11 || items[1][i].y >= Lines)
             return false;
-        }
-        else if (field[items2[i].y][items2[i].x])
-        {
 
+        else if (field[items[1][i].y][items[1][i].x])
             return false;
-        }
     }
     return true;
+}
+else
+{
+for(int i=0; i<8; i++)
+    {
+        if(items[2][i].x < 13 || items[2][i].x >=23 || items[2][i].y >= Lines)
+          return false;
+
+        else if (field[items[2][i].y][items[2][i].x])
+            return false;
+    }
+    return true;
+}
 
 }
 
-void Tetris::showShadow()
+
+
+void Tetris::showShadow(int player)
 {
 // Calculate the shadow positions
     for (int i = 0; i < 8; i++)
     {
-        shadowItems[i] = items[i];
+        shadowItems[player][i] = items[player][i];
     }
-    while (isShadowValid(shadowItems))
+    while (isShadowValid(player, shadowItems))
     {
         for (int i = 0; i < 8; i++)
         {
-            shadowItems[i].y++;
+            shadowItems[player][i].y++;
         }
     }
-    for (int i = 0; i < 8; i++)
-    {
-        shadowItems[i].y--;
-    }
-}
-void Tetris::showShadow2()
-{
-    // Calculate the shadow positions
-    for (int i = 0; i < 8; i++)
-    {
-        shadowItems2[i] = items2[i];
-    }
-    while (isShadowValid2(shadowItems2))
-    {
-        for (int i = 0; i < 8; i++)
+
+        if(shadowItems[1][1].y == 1)
         {
-            shadowItems2[i].y++;
+            std::cout << "game over, player 2 wins ";
+            SDL_Delay(2500);
+            SDL_Quit();
         }
-    }
+        if(shadowItems[2][1].y == 1)
+        {
+            std::cout << "game over, player 1 wins ";
+            SDL_Delay(2500);
+            SDL_Quit();
+        }
     for (int i = 0; i < 8; i++)
     {
-        shadowItems2[i].y--;
+        shadowItems[player][i].y--;
     }
 }
 
@@ -353,185 +318,100 @@ void Tetris::showShadow2()
 void Tetris::gameplay()
 {
     SDL_RenderCopy(render, background, NULL, NULL);
+    for(int player=1; player<=total_player; player++)
+    {
+      showShadow(player);
 
-    showShadow();
-    showShadow2();
     //backup
     for(int i=0; i<8; i++)
-    {
-        backup[i]=items[i];
-        backup2[i]=items2[i];
-    }
+        backup[player][i]=items[player][i];
 
-
-    //Move the tetriminos
-    if(dx)
+   //Move the tetriminos
+    if(dx[player])
     {
         for(int i=0; i<8; i++)
         {
-            items[i].x += dx;
+            items[player][i].x += dx[player];
         }
-        if(!isvalid())
+        if(!isvalid(player))
             for(int i=0; i<8; i++)
-                items[i]=backup[i];
+                items[player][i]=backup[player][i];
 
     }
-    if(dx2)
-    {
 
-        for(int i=0; i<8; i++)
-        {
-
-            items2[i].x +=dx2;
-        }
-
-
-        if(!isvalid2())
-            for(int i=0; i<8; i++)
-                items2[i]=backup2[i];
-
-    }
 
     //Rotate the tetriminos
-    if(rotate && n!=7 && n!=8 && n!=3)
+    if(rotate[player] && n[player]!=3 && n[player]!=7 && n[player]!=8)
     {
-        Point p = items[2]; //center of rotation
+        Point p = items[player][2]; //center of rotation
         for(int i=0; i<8; i++)
         {
-            int x= items[i].y - p.y;
-            int y = items[i].x - p.x;
-            items[i].x = p.x -x;
-            items[i].y = p.y + y;
+            int x= items[player][i].y - p.y;
+            int y = items[player][i].x - p.x;
+            items[player][i].x = p.x -x;
+            items[player][i].y = p.y + y;
         }
-        if(!isvalid())
+        if(!isvalid(player))
             for(int i=0; i<8; i++)
-                items[i]=backup[i];
+                items[player][i]=backup[player][i];
 
     }
-    if(rotate2 && n!=7 && n!=8 && n!=3)
-    {
-        Point p = items2[2]; //center of rotation
-        for(int i=0; i<8; i++)
-        {
-            int x= items2[i].y - p.y;
-            int y = items2[i].x - p.x;
-            items2[i].x = p.x -x;
-            items2[i].y = p.y + y;
-        }
-        if(!isvalid2())
-            for(int i=0; i<8; i++)
-                items2[i]=backup2[i];
-
-    }
-
-    nextT =1;
 
     //Ticks
-    if(currentTime - startTime > delay)
+    if(currentTime[player] - startTime[player] > delay[player])
     {
 
         for(int i=0; i<8; i++)
-        {
-            backup[i]=items[i];
+            backup[player][i]=items[player][i];
 
-
-        }
         for (int i=0; i<8 ; i++)
-        {
-            items[i].y++;
+            items[player][i].y++;
 
-        }
-
-        if(!isvalid())
+        if(!isvalid(player))
         {
             for(int i=0; i<8; i++)
             {
-                field[backup[i].y][backup[i].x]=color;
+                field[backup[player][i].y][backup[player][i].x]=color[player];
             }
-            nextT=1;
-            color = 1 + rand()%7;
-            nextTetrimino();
+
+            //color[player] = 1 + rand()%7;
+
+            nextTetrimino(player);
         }
 
 
-        startTime = currentTime;
+        startTime[player] = currentTime[player];
     }
 
-    if(currentTime2 - startTime2 > delay2)
-    {
-
-        for(int i=0; i<8; i++)
-        {
-            backup2[i]=items2[i];
-        }
-        for (int i=0; i<8 ; i++)
-        {
-            items2[i].y++;
-        }
-
-
-        if(!isvalid2())
-        {
-            for(int i=0; i<8; i++)
-            {
-                field[backup2[i].y][backup2[i].x]=color2;
-            }
-            nextT=2;
-            color2 = 1 + rand()%7;
-            nextTetrimino();
-
-        }
-
-        startTime2 = currentTime2;
-    }
 
     //Check Lines
+    linesCleared[player]=0;
+    linesCleared[player]=clearLines(player);
 
-
-    linesCleared=0;
-
-    linesCleared=clearLines();
     // Update Player 1's score based on the number of lines cleared.
-    increasePlayer1Score(linesCleared);
-    if (tempDelay > 100)
+    increasePlayerScore(player, linesCleared[player]);
+    if (tempDelay[player] > 100)
     {
-        increasePlayer1Level(linesCleared);
+        increasePlayerLevel(player, linesCleared[player]);
     }
-
-
-    // Check if any lines are completed and update the scores accordingly for Player 2.
-    linesCleared2 = 0;
-
-    linesCleared2 = clearLines2();
-    // Update Player 2's score based on the number of lines cleared.
-    increasePlayer2Score(linesCleared2);
-    if (tempDelay2 > 100)
-    {
-        increasePlayer2Level(linesCleared2);
-    }
-
-
 
     //Reset the Tetriminos and update speed of tetriminos according to level
-    dx=0;
-    rotate = false;
-    delay=tempDelay;
+    dx[player]=0;
+    rotate[player] = false;
+    delay[player]=tempDelay[player];
 
-    dx2=0;
-    rotate2= false;
-    delay2=tempDelay2;
-
+}
 field[0][0]=0;
-
-
-    //updateRender();
 }
 
 
 
-int Tetris::clearLines()
+int Tetris::clearLines(int player)
 {
-    linesCleared=0;
+    linesCleared[player]=0;
+
+    if(player==1)
+    {
     for (int i = 0; i < Lines; i++)
     {
 
@@ -547,7 +427,8 @@ int Tetris::clearLines()
 
         if (lineComplete)
         {
-            linesCleared++;
+
+            linesCleared[player]++;
             // Clear the line and shift other lines down.
             for (int k = i; k > 0; k--)
             {
@@ -561,14 +442,15 @@ int Tetris::clearLines()
             {
                 field[0][j] = 0;
             }
+
         }
     }
-    return linesCleared;
+    return linesCleared[player];
 }
 
-int Tetris::clearLines2()
+else
 {
-    for (int i = 2; i < Lines; i++)
+  for (int i = 2; i < Lines; i++)
     {
         bool lineComplete = true;
         for (int j = 13; j < 23; j++)
@@ -582,7 +464,7 @@ int Tetris::clearLines2()
 
         if (lineComplete)
         {
-            linesCleared2++;
+            linesCleared[player]++;
             // Clear the line and shift other lines down.
             for (int k = i; k > 0; k--)
             {
@@ -598,95 +480,68 @@ int Tetris::clearLines2()
             }
         }
     }
-    return linesCleared2;
+    return linesCleared[player];
 }
 
-void Tetris::increasePlayer1Score(int Cleared)
+}
+
+
+void Tetris::increasePlayerScore(int player, int Cleared)
 {
     // Increase score for each line cleared of player 1
-    player1Score += Cleared * 100;
+    playerScore[player] += Cleared * 100;
 }
 
-void Tetris::increasePlayer2Score(int Cleared)
-{
-    // Increase score for each line cleared of player 2
-    player2Score += Cleared * 100;
-}
 
-void Tetris::increasePlayer1Level(int Cleared)
+void Tetris::increasePlayerLevel(int player, int Cleared)
 {
 
     // Increase speed for each line cleared of player 1
-    tempDelay -= Cleared*50;
+    tempDelay[player] -= Cleared*50;
    // Update Player 1 Score only if the max level is not reached
-    if(tempDelay>100)
+    if(tempDelay[player]>100)
     {
-        player1Level+=Cleared/4;
+        playerLevel[player]+=Cleared;
     }
-if(player1Level%2 == 0 && isPowerupActive)  //powerup enable at even level no.
+if(playerLevel[player]%2 == 0 && isPowerupActive[player])  //powerup enable at even level no.
     {
         int powerup_no;
-        if(startPowerup )  // runs only one time per powerup
+        if(startPowerup[player] )  // runs only one time per powerup
         {
             powerup_no = 1; //randomize powerup no(only 1 for now)
 
-            powerup_x = 1+ rand()% 10; //randomize power up spawnpoint
-            powerup_y = 4+rand() % 10;
+          if(player ==1 )
+          {
+            powerup_x[1] = 1+ rand()% 10; //randomize power up spawn point
+            powerup_y[1] = 4+rand() % 10;
 
-             if(field[powerup_x][powerup_y]!=0) //check vacant field
+             if(field[powerup_x[1]][powerup_y[1]]!=0) //check vacant field
              {
-                  powerup_x = 1+ rand()% 10;
-                  powerup_y = 4+rand() % 10;
+                  powerup_x[1] = 1+ rand()% 10;
+                  powerup_y[1] = 4+rand() % 10;
              }
-            powerupStartTime = currentTime;
-            startPowerup =false;
+          }
+          else if(player ==2)
+          {
+              powerup_x[2] = 13+ rand()% 10;
+            powerup_y[2] = 4+rand() % 10;
+
+             if(field[powerup_x[2]][powerup_y[2]]!=0)
+             {
+                  powerup_x[2] = 13+ rand()% 10;
+                  powerup_y[2] = 4+rand() % 10;
+             }
+          }
+            powerupStartTime[player] = currentTime[player];
+            startPowerup[player] =false;
 
             }
-        powerup(1,powerup_no);
+        powerup(player, powerup_no);
 
     }
-    if(player1Level%2 ==1){  //reset for next level powerup
-            isPowerupActive = true;
-            startPowerup = true;
-
-
-    }
-}
-
-void Tetris::increasePlayer2Level(int Cleared)
-{
-
-    // Increase speed for each line cleared of player 2
-    tempDelay2 -= Cleared*50;
-
-    // Update Player 2 Score only if the max level is not reached
-    if(tempDelay2>100)
-    {
-        player2Level+=Cleared;
-    }
-    if(player2Level%2 == 0 && isPowerupActive2)
-    {
-
-        if(startPowerup2 )
-        {
-            powerup_x2 = 13+ rand()% 10;
-            powerup_y2 = 4+rand() % 10;
-
-             if(field[powerup_x2][powerup_y2]!=0)
-             {
-                  powerup_x2 = 13+ rand()% 10;
-                  powerup_y2 = 4+rand() % 10;
-             }
-            powerupStartTime2 = currentTime2;
-            startPowerup2 =false;
-
-            }
-        powerup(2, 1+ rand()%1);
-
-    }
-    if(player2Level%2 ==1){
-            isPowerupActive2 = true;
-            startPowerup2 = true;
+    if(playerLevel[player]%2 ==1){  //reset for next level powerup
+            isPowerupActive[player] = true;
+            startPowerup[player] = true;
 
 
     }
@@ -698,7 +553,7 @@ void Tetris::drawScores()
 
 
     // Render the score for Player 1
-    std::string player1ScoreText = "Player 1 Score: " + std::to_string(player1Score);
+    std::string player1ScoreText = "Player 1 Score: " + std::to_string(playerScore[1]);
     SDL_Surface* player1ScoreSurface = TTF_RenderText_Solid(font, player1ScoreText.c_str(), textColor);
     SDL_Texture* player1ScoreTexture = SDL_CreateTextureFromSurface(render, player1ScoreSurface);
 
@@ -716,7 +571,7 @@ void Tetris::drawScores()
     SDL_DestroyTexture(player1ScoreTexture);
 
     // Render the score for Player 2
-    std::string player2ScoreText = "Player 2 Score: " + std::to_string(player2Score);
+    std::string player2ScoreText = "Player 2 Score: " + std::to_string(playerScore[2]);
     SDL_Surface* player2ScoreSurface = TTF_RenderText_Solid(font, player2ScoreText.c_str(), textColor);
     SDL_Texture* player2ScoreTexture = SDL_CreateTextureFromSurface(render, player2ScoreSurface);
 
@@ -735,7 +590,7 @@ void Tetris::drawScores()
     SDL_DestroyTexture(player2ScoreTexture);
 
     //Render level for player 1
-    std::string player1LevelText = "Player 1 Level: " + std::to_string(player1Level);
+    std::string player1LevelText = "Player 1 Level: " + std::to_string(playerLevel[1]);
     SDL_Surface* player1LevelSurface = TTF_RenderText_Solid(font, player1LevelText.c_str(), textColor);
     SDL_Texture* player1LevelTexture = SDL_CreateTextureFromSurface(render, player1LevelSurface);
 
@@ -754,7 +609,7 @@ void Tetris::drawScores()
     SDL_DestroyTexture(player1LevelTexture);
 
     //Render level for player 2
-    std::string player2LevelText = "Player 2 Level: " + std::to_string(player2Level);
+    std::string player2LevelText = "Player 2 Level: " + std::to_string(playerLevel[2]);
     SDL_Surface* player2LevelSurface = TTF_RenderText_Solid(font, player2LevelText.c_str(), textColor);
     SDL_Texture* player2LevelTexture = SDL_CreateTextureFromSurface(render, player2LevelSurface);
 
@@ -775,11 +630,12 @@ void Tetris::drawScores()
 
 void Tetris::updateRender()
 {
-
+    for(int player=1; player<=total_player; player++)
+{
    for (int j = 0; j < 8; j++)
     {
-        setPosRect(srcR, color * BlockW);
-        setPosRect(destR, shadowItems[j].x * BlockW, shadowItems[j].y * BlockH);
+        setPosRect(srcR, color[player] * BlockW);
+        setPosRect(destR, shadowItems[player][j].x * BlockW, shadowItems[player][j].y * BlockH);
 
 
         SDL_SetTextureAlphaMod(blocks, 25); //
@@ -799,47 +655,20 @@ void Tetris::updateRender()
 
     for(int i=0; i<8; i++)
     {
-        setPosRect(srcR, color *  BlockW);
-        setPosRect(destR, items[i].x* BlockW, items[i].y*BlockH);
+        setPosRect(srcR, color[player] *  BlockW);
+        setPosRect(destR, items[player][i].x* BlockW, items[player][i].y*BlockH);
 
         SDL_RenderCopy(render,blocks, &srcR, &destR);
     }
 
-    for (int j = 0; j < 8; j++)
-    {
-        setPosRect(srcR, color2 * BlockW);
-        setPosRect(destR, shadowItems2[j].x * BlockW, shadowItems2[j].y * BlockH);
 
 
-        SDL_SetTextureAlphaMod(blocks, 25); //
-        SDL_RenderCopy(render, blocks, &srcR, &destR);
 
-        // Restore full alpha for subsequent rendering
-        SDL_SetTextureAlphaMod(blocks, 255); // Set alpha to 255 (fully opaque)
-    }
-
-
-    for(int i=0; i<Lines ; i++)
-        for(int j=0; j < Cols; j++)
-            if(field[i][j])
-            {
-                setPosRect(srcR, field[i][j] * BlockW);
-                setPosRect(destR, j*BlockW, i*BlockH);
-                SDL_RenderCopy(render, blocks, &srcR, &destR );
-            }
-
-    for(int j=0; j<8; j++)
-    {
-        setPosRect(srcR, color2 *  BlockW);
-        setPosRect(destR, items2[j].x* BlockH, items2[j].y*BlockH);
-        SDL_RenderCopy(render,blocks, &srcR, &destR);
-
-    }
 
 
     drawScores();
 
-
+}
     SDL_RenderPresent(render);
 
 }

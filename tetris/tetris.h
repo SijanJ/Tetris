@@ -33,14 +33,16 @@ public:
 
     bool isvalid(int player);
 
-
+    SDL_Renderer* getRenderer(){return render;}
     bool init(const char* title);
     void nextTetrimino(int player_no, bool differentShape = false);
     void handleEvents();
     void setPosRect(SDL_Rect& rect, int x=0, int y=0, int w=BlockW, int h = BlockH);
     void moveRectPos(SDL_Rect& rect,int x, int y);
     void gameplay();
+    void pauseMenuOptions(int);
     void updateRender();
+    void renderText(std::string, int, int);
     void clean();
     void hardDrop(int player);
     int clearLines(int player);
@@ -57,13 +59,15 @@ private:
     SDL_Texture* player1LevelTexture=NULL, * player2LevelTexture=NULL;
     SDL_Surface* player1LevelSurface=NULL, *player2LevelSurface=NULL;
     SDL_Rect srcR = {0,0, BlockW, BlockH}, destR= {0,0, BlockW, BlockH};
-    SDL_Rect player1ScoreRect;
-    SDL_Rect player2ScoreRect;
-    SDL_Rect player1LevelRect;
-    SDL_Rect player2LevelRect;
-    TTF_Font *font ;
+    SDL_Rect playerRect;
+    TTF_Font *font;
     SDL_Color textColor = {0,0,0};
     bool running = false;
+    bool paused = false;
+    int showPauseMenu();
+    void clearField(int);
+    void resetGame();
+
 
     int field[Lines][Cols]= {0};
 
@@ -81,7 +85,7 @@ private:
 
     unsigned int tempDelay[3]={1000,1000,1000};
 
-    int playerScore[3] = {0,0,0}; // Score for player 1
+    int playerScore[3] = {0,0,0}; // Score for players
     int linesCleared[3] = {0};
     int playerLevel[3]={0};
     std::string player2LevelText;

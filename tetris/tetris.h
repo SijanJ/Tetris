@@ -33,7 +33,10 @@ public:
 
     bool isvalid(int player);
 
-    SDL_Renderer* getRenderer(){return render;}
+    SDL_Renderer* getRenderer()
+    {
+        return render;
+    }
     bool init(const char* title);
     void nextTetrimino(int player_no, bool differentShape = false);
     void handleEvents();
@@ -60,6 +63,7 @@ private:
     SDL_Surface* player1LevelSurface=NULL, *player2LevelSurface=NULL;
     SDL_Rect srcR = {0,0, BlockW, BlockH}, destR= {0,0, BlockW, BlockH};
     SDL_Rect playerRect;
+    SDL_Rect gameOverRect;
     TTF_Font *font;
     SDL_Color textColor = {0,0,0};
     bool running = false;
@@ -67,7 +71,9 @@ private:
     int showPauseMenu();
     void clearField(int);
     void resetGame();
-
+    int gameOver();
+    void gameOverMenuOptions(int);
+    bool isGameOver[2]= {false,false};
 
     int field[Lines][Cols]= {0};
 
@@ -78,16 +84,16 @@ private:
     } items[3][8],backup[3][8],shadowItems[3][8];
 
     int color[3] = {1,3,4};
-    int dx[3] ={0};
+    int dx[3] = {0};
     int n[3];
-    bool rotate[3] ={false};
+    bool rotate[3] = {false};
     unsigned int delay[3] = {1000,1000,1000};
 
-    unsigned int tempDelay[3]={1000,1000,1000};
+    unsigned int tempDelay[3]= {1000,1000,1000};
 
     int playerScore[3] = {0,0,0}; // Score for players
     int linesCleared[3] = {0};
-    int playerLevel[3]={0};
+    int playerLevel[3]= {0};
     std::string player2LevelText;
     std::string player1LevelText;
 
@@ -101,7 +107,7 @@ private:
     void showShadow(int player);
     bool isShadowValid(int player, const Point shadowItems[3][8]);
     void powerup(int player_no, int powerup_no);
-    Uint32 startTime[3]={0}, currentTime[3] ={0};
+    Uint32 startTime[3]= {0}, currentTime[3] = {0};
 
 };
 

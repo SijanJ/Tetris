@@ -51,7 +51,7 @@ bool Tetris::init(const char* title)
                 blocks = SDL_CreateTextureFromSurface(render, loadSurf);
                 SDL_FreeSurface(loadSurf);
 
-                font = TTF_OpenFont("Font/Tetris.ttf", 24);
+                font = TTF_OpenFont("Font/Gagalin.ttf", 24);
                 if (!font)
                 {
                     std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
@@ -79,23 +79,16 @@ bool Tetris::init(const char* title)
     return true;
 }
 
-int Tetris::showPauseMenu(){
+int Tetris::showPauseMenu()
+{
     Menu pauseMenu(render);
     paused = true;
-    int selectedOption = pauseMenu.showMenu(paused);
+    int selectedOption = pauseMenu.showMenu(paused,isGameOver[0]||isGameOver[1]);
     paused = false;
-    if(selectedOption==2){
-        total_player =pauseMenu.showMenu(paused)+1;
-        if(total_player==1 || total_player==2){
-        resetGame();
-        }
-        else{
-            running=false;
-        }
-    }
 
     return selectedOption;
 }
+
 void Tetris::nextTetrimino(int player, bool differentShape)
 {
     if(differentShape == true)
@@ -303,7 +296,6 @@ bool Tetris::isvalid(int player)
 
 void Tetris::showShadow(int player)
 {
-    Menu gameOver(render);
 // Calculate the shadow positions
     for (int i = 0; i < 8; i++)
     {
@@ -319,46 +311,63 @@ void Tetris::showShadow(int player)
 
     if(shadowItems[1][1].y == 1)
     {
-        std::cout << "game over, player 2 wins ";
-        SDL_Delay(2500);
-        total_player=gameOver.showMenu(paused)+1;
-
-        if(total_player==1 || total_player==2){
-        resetGame();
-        }
-        else{
-                exit(0);
-        }
+        isGameOver[0] = true;
+        SDL_Delay(500);
     }
     if(shadowItems[2][1].y == 1)
     {
-        std::cout << "game over, player 1 wins ";
-        SDL_Delay(2500);
-        total_player=gameOver.showMenu(paused)+1;
-
-        if(total_player==1 || total_player==2){
-        resetGame();
-        }
-        else{
-            exit(0);
-        }
+        isGameOver[1] = true;
+        SDL_Delay(500);
     }
     for (int i = 0; i < 8; i++)
     {
         shadowItems[player][i].y--;
     }
 }
-void Tetris::pauseMenuOptions(int option){
+
+int Tetris::gameOver()
+{
+
+    int selectedOption;
+    Menu game(render);
+    if(isGameOver[0])
+    {
+        if(total_player==2)
+            selectedOption = game.showMenu(paused,isGameOver[0],playerScore[0],playerScore[2],total_player,2);
+        else
+            selectedOption = game.showMenu(paused,isGameOver[0],playerScore[1]);
+        isGameOver[0]=false;
+    }
+    else
+    {
+        selectedOption = game.showMenu(paused,isGameOver[1], playerScore[1],playerScore[2],total_player,1);
+        isGameOver[1]=false;
+    }
+
+
+    return selectedOption;
+}
+void Tetris::pauseMenuOptions(int option)
+{
     Menu mainMenu(render);
-    switch (option){
+    switch (option)
+    {
     case 0:
-        paused = false;
         break;
     case 1:
         resetGame();
-        paused = false;
         break;
     case 2:
+        total_player=mainMenu.showMenu(paused, isGameOver[0]||isGameOver[1])+1;
+        if(total_player==1||total_player==2)
+        {
+            resetGame();
+        }
+        else
+        {
+            running=false;
+            exit(0);
+        }
         break;
     case 3:
         running=false;
@@ -369,10 +378,46 @@ void Tetris::pauseMenuOptions(int option){
     }
 }
 
-void Tetris::resetGame() {
+void Tetris::gameOverMenuOptions(int option)
+{
+    Menu mainMenu(render);
+    switch (option)
+    {
+    case 0:
+        resetGame();
+        total_player=1;
+        break;
+    case 1:
+        resetGame();
+        total_player=2;
+        break;
+    case 2:
+        total_player=mainMenu.showMenu(paused, isGameOver[0]||isGameOver[1])+1;
+        if(total_player==1||total_player==2)
+        {
+            resetGame();
+        }
+        else
+        {
+            running=false;
+            exit(0);
+        }
+        break;
+    case 3:
+        running=false;
+        exit(0);
+        break;
+    default:
+        break;
+    }
+}
+
+void Tetris::resetGame()
+{
     // Reset game-related variables, fields, scores, levels, etc.
     // For example:
-    for (int player = 1; player <= total_player; player++) {
+    for (int player = 1; player <= total_player; player++)
+    {
         playerScore[player] = 0;
         playerLevel[player] = 0;
         // Reset other relevant variables
@@ -382,9 +427,12 @@ void Tetris::resetGame() {
     }
 }
 
-void Tetris::clearField(int player) {
-    for (int i = 0; i < Lines; i++) {
-        for (int j = 0; j < Cols; j++) {
+void Tetris::clearField(int player)
+{
+    for (int i = 0; i < Lines; i++)
+    {
+        for (int j = 0; j < Cols; j++)
+        {
             field[i][j] = 0;
         }
     }
@@ -393,96 +441,103 @@ void Tetris::clearField(int player) {
 void Tetris::gameplay()
 {
     SDL_RenderCopy(render, background, NULL, NULL);
-    if(paused){
+    if(paused && (!isGameOver[0] || !isGameOver[1]))
+    {
         int selectedOption = showPauseMenu();
         pauseMenuOptions(selectedOption);
     }
-    else{
-    for(int player=1; player<=total_player; player++)
+    if(isGameOver[0]||isGameOver[1])
     {
-        showShadow(player);
-
-        //backup
-        for(int i=0; i<8; i++)
-            backup[player][i]=items[player][i];
-
-        //Move the tetriminos
-        if(dx[player])
+        int selectedOption = gameOver();
+        gameOverMenuOptions(selectedOption);
+    }
+    else
+    {
+        for(int player=1; player<=total_player; player++)
         {
-            for(int i=0; i<8; i++)
-            {
-                items[player][i].x += dx[player];
-            }
-            if(!isvalid(player))
-                for(int i=0; i<8; i++)
-                    items[player][i]=backup[player][i];
+            showShadow(player);
 
-        }
-
-
-        //Rotate the tetriminos
-        if(rotate[player] && n[player]!=3 && n[player]!=7 && n[player]!=8)
-        {
-            Point p = items[player][2]; //center of rotation
-            for(int i=0; i<8; i++)
-            {
-                int x= items[player][i].y - p.y;
-                int y = items[player][i].x - p.x;
-                items[player][i].x = p.x -x;
-                items[player][i].y = p.y + y;
-            }
-            if(!isvalid(player))
-                for(int i=0; i<8; i++)
-                    items[player][i]=backup[player][i];
-
-        }
-
-        //Ticks
-        if(currentTime[player] - startTime[player] > delay[player])
-        {
-
+            //backup
             for(int i=0; i<8; i++)
                 backup[player][i]=items[player][i];
 
-            for (int i=0; i<8 ; i++)
-                items[player][i].y++;
-
-            if(!isvalid(player))
+            //Move the tetriminos
+            if(dx[player])
             {
                 for(int i=0; i<8; i++)
                 {
-                    field[backup[player][i].y][backup[player][i].x]=color[player];
+                    items[player][i].x += dx[player];
                 }
+                if(!isvalid(player))
+                    for(int i=0; i<8; i++)
+                        items[player][i]=backup[player][i];
 
-                //color[player] = 1 + rand()%7;
-
-                nextTetrimino(player);
             }
 
 
-            startTime[player] = currentTime[player];
+            //Rotate the tetriminos
+            if(rotate[player] && n[player]!=3 && n[player]!=7 && n[player]!=8)
+            {
+                Point p = items[player][2]; //center of rotation
+                for(int i=0; i<8; i++)
+                {
+                    int x= items[player][i].y - p.y;
+                    int y = items[player][i].x - p.x;
+                    items[player][i].x = p.x -x;
+                    items[player][i].y = p.y + y;
+                }
+                if(!isvalid(player))
+                    for(int i=0; i<8; i++)
+                        items[player][i]=backup[player][i];
+
+            }
+
+            //Ticks
+            if(currentTime[player] - startTime[player] > delay[player])
+            {
+
+                for(int i=0; i<8; i++)
+                    backup[player][i]=items[player][i];
+
+                for (int i=0; i<8 ; i++)
+                    items[player][i].y++;
+
+                if(!isvalid(player))
+                {
+                    for(int i=0; i<8; i++)
+                    {
+                        field[backup[player][i].y][backup[player][i].x]=color[player];
+                    }
+
+                    //color[player] = 1 + rand()%7;
+
+                    nextTetrimino(player);
+                }
+
+
+                startTime[player] = currentTime[player];
+            }
+
+
+            //Check Lines
+            linesCleared[player]=0;
+            linesCleared[player]=clearLines(player);
+
+            // Update Player 1's score based on the number of lines cleared.
+            increasePlayerScore(player, linesCleared[player]);
+            if (tempDelay[player] > 100)
+            {
+                increasePlayerLevel(player, linesCleared[player]);
+            }
+
+            //Reset the Tetriminos and update speed of tetriminos according to level
+            dx[player]=0;
+            rotate[player] = false;
+            delay[player]=tempDelay[player];
+
         }
-
-
-        //Check Lines
-        linesCleared[player]=0;
-        linesCleared[player]=clearLines(player);
-
-        // Update Player 1's score based on the number of lines cleared.
-        increasePlayerScore(player, linesCleared[player]);
-        if (tempDelay[player] > 100)
-        {
-            increasePlayerLevel(player, linesCleared[player]);
-        }
-
-        //Reset the Tetriminos and update speed of tetriminos according to level
-        dx[player]=0;
-        rotate[player] = false;
-        delay[player]=tempDelay[player];
-
+        field[0][0]=0;
     }
-    field[0][0]=0;
-}
 }
 
 
@@ -568,17 +623,16 @@ int Tetris::clearLines(int player)
 
 void Tetris::increasePlayerScore(int player, int Cleared)
 {
-    // Increase score for each line cleared of player 1
+    // Increase score for each line cleared of player
     playerScore[player] += Cleared * 100;
 }
 
 
 void Tetris::increasePlayerLevel(int player, int Cleared)
 {
-
-    // Increase speed for each line cleared of player 1
+    // Increase speed for each line cleared of player
     tempDelay[player] -= Cleared*50;
-    // Update Player 1 Score only if the max level is not reached
+    // Update Player Score only if the max level is not reached
     if(tempDelay[player]>100)
     {
         playerLevel[player]+=Cleared;
@@ -715,6 +769,7 @@ void Tetris::clean()
 {
     SDL_DestroyTexture(blocks);
     SDL_DestroyTexture(background);
+    SDL_DestroyTexture(powerup_img);
 
     // Close the font after use
     TTF_CloseFont(font);

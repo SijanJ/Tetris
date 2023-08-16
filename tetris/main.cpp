@@ -17,18 +17,19 @@ int main(int argc, char *argv[] )
     {
         Menu mainMenu(tetris->getRenderer());
 
-        int selectedItemIndex = mainMenu.showMenu(false);
+        int selectedItemIndex = mainMenu.showMenu(false,false);
 
-        if(selectedItemIndex == 0 || selectedItemIndex == 1){
-                tetris->total_player = selectedItemIndex+1;
-        while (tetris ->isRunning())
+        if(selectedItemIndex == 0 || selectedItemIndex == 1)
         {
-            tetris-> setCurrentTime(SDL_GetTicks());
-            tetris->handleEvents();
-            tetris->gameplay();
-            tetris ->updateRender();
+            tetris->total_player = selectedItemIndex+1;
+            while (tetris ->isRunning())
+            {
+                tetris-> setCurrentTime(SDL_GetTicks());
+                tetris->handleEvents();
+                tetris->gameplay();
+                tetris ->updateRender();
+            }
         }
-    }
     }
     else
     {

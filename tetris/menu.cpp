@@ -75,6 +75,7 @@ void Menu::startScreen()
 
 int Menu::showMenu(bool p, bool g, int s1,int s2, int pl,int w)
 {
+
     paused = p;
     score1=s1;
     score2=s2;
@@ -98,6 +99,8 @@ int Menu::showMenu(bool p, bool g, int s1,int s2, int pl,int w)
 
     while(menuRunning)
     {
+        if(menuRunning)
+            Mix_PauseMusic();
         while(SDL_PollEvent(&e))
         {
             switch(e.type)
@@ -115,8 +118,14 @@ int Menu::showMenu(bool p, bool g, int s1,int s2, int pl,int w)
                     selectedItemIndex=(selectedItemIndex+1)%tempItems.size();
                     break;
                 case SDLK_RETURN:
+                    if(selectedItemIndex == 1 || selectedItemIndex==2)
+                        Mix_RewindMusic();
+                    Mix_ResumeMusic();
                     menuRunning=false;
                     return selectedItemIndex;
+                case SDLK_m:
+                   m2.toggleVolume();
+                  break;
                 default:
                     break;
                 }
@@ -155,9 +164,9 @@ int Menu::showMenu(bool p, bool g, int s1,int s2, int pl,int w)
 
         renderMenu();
 
-    }
 
-    return -1;
+    }
+        return -1;
 
 }
 

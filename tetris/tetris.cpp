@@ -3,6 +3,7 @@
 #include "powerup.h"
 #include "menu.h"
 
+
 const int Tetris::figures[][8]=
 {
     4,5,6,7,4,5,6,7,
@@ -14,6 +15,7 @@ const int Tetris::figures[][8]=
     0,1,5,6,0,1,5,6,
     0,1,2,4,6,8,9,10,
     1,4,5,6,9,1,4,5,
+    1,2,5,8,9,1,2,5,
 
 };
 
@@ -44,6 +46,8 @@ bool Tetris::init(const char* title)
                     // Handle the error or return false.
                 }
 
+                m1.initMixer();
+
                 SDL_Surface* loadSurf = IMG_Load("images/twobox.png");
                 background = SDL_CreateTextureFromSurface(render, loadSurf);
                 SDL_FreeSurface(loadSurf);
@@ -62,6 +66,9 @@ bool Tetris::init(const char* title)
                 powerup_img = SDL_CreateTextureFromSurface(render, loadSurf);
                 SDL_FreeSurface(loadSurf);
 
+                m1.playMusic("sound/Tetris.mp3");
+                 Mix_PauseMusic();
+                 m1.load_AllSound();
 
                 nextTetrimino(1);
                 nextTetrimino(2);
@@ -85,7 +92,6 @@ int Tetris::showPauseMenu()
     paused = true;
     int selectedOption = pauseMenu.showMenu(paused,isGameOver[0]||isGameOver[1]);
     paused = false;
-
     return selectedOption;
 }
 
@@ -93,7 +99,7 @@ void Tetris::nextTetrimino(int player, bool differentShape)
 {
     if(differentShape == true)
     {
-        n[player]= 7 + rand()%2;
+        n[player]= 7 + rand()%3;
         color[player] = 8;
     }
     else
@@ -122,7 +128,6 @@ void Tetris::nextTetrimino(int player, bool differentShape)
         }
 
     }
-
 }
 
 void Tetris::handleEvents()
@@ -139,39 +144,56 @@ void Tetris::handleEvents()
             running = false;
             break;
         case SDL_KEYDOWN:
+
+                int x;
+                if(total_player==1)
+                    x = 1;
+                else
+                   x=2;
             switch(e.key.keysym.sym)
             {
             case SDLK_UP:
-                rotate[2] = true;
+                rotate[x] = true;
+                m1.playSound(0);
                 break;
             case SDLK_LEFT:
-                dx[2] = -1;
+                dx[x] = -1;
+                m1.playSound(0);
                 break;
             case SDLK_RIGHT:
-                dx[2] = 1;
+                dx[x] = 1;
+                m1.playSound(0);
                 break;
             case SDLK_DOWN:
-                delay[2] = 50;
+                delay[x] = 50;
+                m1.playSound(0);
                 break;
             case SDLK_RSHIFT:
-                hardDrop(2);
+                hardDrop(x);
+                m1.playSound(1);
                 break;
             case SDLK_w:
                 rotate[1] = true;
+                m1.playSound(0);
                 break;
             case SDLK_a:
                 dx[1] = -1;
+                m1.playSound(0);
                 break;
             case SDLK_d:
                 dx[1] = 1;
+                m1.playSound(0);
                 break;
             case SDLK_s:
                 delay[1] = 50;
+                m1.playSound(0);
                 break;
             case SDLK_LSHIFT:
                 hardDrop(1);
+                m1.playSound(1);
                 break;
             case SDLK_ESCAPE:
+                Mix_PauseMusic();
                 paused = true;
             }
         }
@@ -217,15 +239,13 @@ void Tetris::hardDrop(int player)
 
     color[player] = 1 + rand() % 7;
     nextTetrimino(player);
-    int linesCleared[3];
-    linesCleared[player] = clearLines(player);
-    increasePlayerScore(player, linesCleared[player]);
-    if (tempDelay[player] > 100)
-    {
-        increasePlayerLevel(player, linesCleared[player]);
-    }
 
-    showShadow(player);
+    //if (tempDelay[player] > 100)
+  //  {
+ //       increasePlayerLevel(player, linesCleared[player]);
+    //}
+
+//    showShadow(player);
 
 
 }
@@ -269,11 +289,17 @@ bool Tetris::isvalid(int player)
     {
         for(int i=0; i<8; i++)
         {
-            if(items[1][i].x < 1 || items[1][i].x >=11 || items[1][i].y >= Lines)
+            if(items[1][i].x < 1 || items[1][i].x >=11 || items[1][i].y >= Lines){
+
+                m1.playSound(3);
                 return false;
+            }
 
             else if (field[items[1][i].y][items[1][i].x])
-                return false;
+            {
+                m1.playSound(3);
+              return false;
+            }
         }
         return true;
     }
@@ -281,11 +307,15 @@ bool Tetris::isvalid(int player)
     {
         for(int i=0; i<8; i++)
         {
-            if(items[2][i].x < 13 || items[2][i].x >=23 || items[2][i].y >= Lines)
+            if(items[2][i].x < 13 || items[2][i].x >=23 || items[2][i].y >= Lines){
+                    m1.playSound(3);
                 return false;
+            }
 
-            else if (field[items[2][i].y][items[2][i].x])
+            else if (field[items[2][i].y][items[2][i].x]){
+                    m1.playSound(3);
                 return false;
+            }
         }
         return true;
     }
@@ -419,11 +449,15 @@ void Tetris::resetGame()
     for (int player = 1; player <= total_player; player++)
     {
         playerScore[player] = 0;
-        playerLevel[player] = 0;
+        playerLevel[player] = 1;
         // Reset other relevant variables
         nextTetrimino(player, false); // Reset the next tetriminos
         // Clear the field and initialize it again
         clearField(player);
+        isPowerupActive[player] = false;
+        tempDelay[player]=1000;
+        pDelay[player]= 0;
+        startPowerup[player] = true;
     }
 }
 
@@ -476,7 +510,8 @@ void Tetris::gameplay()
 
 
             //Rotate the tetriminos
-            if(rotate[player] && n[player]!=3 && n[player]!=7 && n[player]!=8)
+
+            if(rotate[player] && n[player]!=3 && n[player]!=7 && n[player]!=8 && n[player]!=9)
             {
                 Point p = items[player][2]; //center of rotation
                 for(int i=0; i<8; i++)
@@ -486,11 +521,14 @@ void Tetris::gameplay()
                     items[player][i].x = p.x -x;
                     items[player][i].y = p.y + y;
                 }
+
                 if(!isvalid(player))
+                {
                     for(int i=0; i<8; i++)
                         items[player][i]=backup[player][i];
-
+                }
             }
+
 
             //Ticks
             if(currentTime[player] - startTime[player] > delay[player])
@@ -508,9 +546,7 @@ void Tetris::gameplay()
                     {
                         field[backup[player][i].y][backup[player][i].x]=color[player];
                     }
-
-                    //color[player] = 1 + rand()%7;
-
+                    m1.playSound(1);
                     nextTetrimino(player);
                 }
 
@@ -520,20 +556,20 @@ void Tetris::gameplay()
 
 
             //Check Lines
-            linesCleared[player]=0;
-            linesCleared[player]=clearLines(player);
+           linesCleared[player]=clearLines(player);
 
             // Update Player 1's score based on the number of lines cleared.
-            increasePlayerScore(player, linesCleared[player]);
             if (tempDelay[player] > 100)
             {
                 increasePlayerLevel(player, linesCleared[player]);
-            }
+               if(linesCleared[player]/4==1)
+                   linesCleared[player]-=4;
+           }
 
             //Reset the Tetriminos and update speed of tetriminos according to level
             dx[player]=0;
             rotate[player] = false;
-            delay[player]=tempDelay[player];
+            delay[player]=tempDelay[player] - pDelay[player];
 
         }
         field[0][0]=0;
@@ -543,7 +579,7 @@ void Tetris::gameplay()
 
 int Tetris::clearLines(int player)
 {
-    linesCleared[player]=0;
+   // int linesCleared[player]={0};
 
     if(player==1)
     {
@@ -564,6 +600,7 @@ int Tetris::clearLines(int player)
             {
 
                 linesCleared[player]++;
+                m1.playSound(2);
                 // Clear the line and shift other lines down.
                 for (int k = i; k > 0; k--)
                 {
@@ -577,8 +614,9 @@ int Tetris::clearLines(int player)
                 {
                     field[0][j] = 0;
                 }
-
+              increasePlayerScore(1);
             }
+
         }
         return linesCleared[player];
     }
@@ -600,6 +638,7 @@ int Tetris::clearLines(int player)
             if (lineComplete)
             {
                 linesCleared[player]++;
+                 m1.playSound(2);
                 // Clear the line and shift other lines down.
                 for (int k = i; k > 0; k--)
                 {
@@ -613,6 +652,7 @@ int Tetris::clearLines(int player)
                 {
                     field[0][j] = 0;
                 }
+                increasePlayerScore(2);
             }
         }
         return linesCleared[player];
@@ -621,35 +661,37 @@ int Tetris::clearLines(int player)
 }
 
 
-void Tetris::increasePlayerScore(int player, int Cleared)
+void Tetris::increasePlayerScore(int player)
 {
     // Increase score for each line cleared of player
-    playerScore[player] += Cleared * 100;
+    playerScore[player] +=  100;
 }
 
 
 void Tetris::increasePlayerLevel(int player, int Cleared)
 {
-    // Increase speed for each line cleared of player
-    tempDelay[player] -= Cleared*50;
     // Update Player Score only if the max level is not reached
-    if(tempDelay[player]>100)
+    if(Cleared/4 ==1)
     {
-        playerLevel[player]+=Cleared;
+        playerLevel[player]++;
+        tempDelay[player]-=100;
+        if(tempDelay[player]<100)
+        tempDelay[player]=100;
+
     }
-    if(playerLevel[player]%2 == 0 && isPowerupActive[player])  //powerup enable at even level no.
+     if(playerLevel[player]%2 == 0 && isPowerupActive[player])  //powerup enable at even level no.
     {
-        int powerup_no;
+        int powerup_no[3];
         if(startPowerup[player] )  // runs only one time per powerup
         {
-            powerup_no = 1; //randomize powerup no(only 1 for now)
+
 
             if(player ==1 )
             {
                 powerup_x[1] = 1+ rand()% 10; //randomize power up spawn point
                 powerup_y[1] = 4+rand() % 10;
 
-                if(field[powerup_x[1]][powerup_y[1]]!=0) //check vacant field
+                while(field[powerup_x[1]][powerup_y[1]]!=0) //check vacant field
                 {
                     powerup_x[1] = 1+ rand()% 10;
                     powerup_y[1] = 4+rand() % 10;
@@ -660,7 +702,7 @@ void Tetris::increasePlayerLevel(int player, int Cleared)
                 powerup_x[2] = 13+ rand()% 10;
                 powerup_y[2] = 4+rand() % 10;
 
-                if(field[powerup_x[2]][powerup_y[2]]!=0)
+                while(field[powerup_x[2]][powerup_y[2]]!=0)
                 {
                     powerup_x[2] = 13+ rand()% 10;
                     powerup_y[2] = 4+rand() % 10;
@@ -670,10 +712,11 @@ void Tetris::increasePlayerLevel(int player, int Cleared)
             startPowerup[player] =false;
 
         }
-        powerup(player, powerup_no);
+
+        powerup(player, 1 + rand()%2);
 
     }
-    if(playerLevel[player]%2 ==1)   //reset for next level powerup
+    if(playerLevel[player]%2 == 1 )   //reset for next level powerup
     {
         isPowerupActive[player] = true;
         startPowerup[player] = true;
@@ -767,6 +810,7 @@ void Tetris::updateRender()
 
 void Tetris::clean()
 {
+    resetGame();
     SDL_DestroyTexture(blocks);
     SDL_DestroyTexture(background);
     SDL_DestroyTexture(powerup_img);
@@ -780,5 +824,7 @@ void Tetris::clean()
 
     IMG_Quit();
     TTF_Quit();
+    m1.quitMixer();
+
     SDL_Quit();
 }

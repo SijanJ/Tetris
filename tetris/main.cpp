@@ -16,7 +16,7 @@ int main(int argc, char *argv[] )
     if(tetris ->init(title))
     {
         Menu mainMenu(tetris->getRenderer());
-
+        mainMenu.startScreen();
         int selectedItemIndex = mainMenu.showMenu(false,false);
 
         if(selectedItemIndex == 0 || selectedItemIndex == 1)

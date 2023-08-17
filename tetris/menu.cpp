@@ -1,6 +1,78 @@
 #include "menu.h"
 #include<iostream>
 
+void Menu::renderImage(const char* path, bool background)
+{
+    imageSurface = IMG_Load(path);
+    imageTexture = SDL_CreateTextureFromSurface(render, imageSurface);
+    if(!background)
+    {
+        imageRect.x = (ScreenW - imageSurface->w) / 2;
+        imageRect.y = 50;
+        imageRect.w = imageSurface->w;
+        imageRect.h = imageSurface->h;
+        SDL_RenderCopy(render, imageTexture, NULL, &imageRect);
+    }
+    else
+    {
+        SDL_RenderCopy(render, imageTexture, NULL, NULL);
+    }
+    SDL_FreeSurface(imageSurface);
+    SDL_DestroyTexture(imageTexture);
+}
+
+void Menu::startScreen()
+{
+    bool showText = true;
+    Uint32 lastTextChangeTime = SDL_GetTicks();
+    bool startScreenRunning = true;
+    SDL_SetRenderDrawColor(render, 0, 0, 0, 255);
+    SDL_RenderClear(render);
+
+    while (startScreenRunning)
+    {
+        SDL_Event e;
+        while (SDL_PollEvent(&e))
+        {
+            if (e.type == SDL_QUIT)
+            {
+                exit(0);
+            }
+            if (e.type == SDL_KEYDOWN)
+            {
+                if (e.key.keysym.sym == SDLK_RETURN)
+                {
+                    return;
+                }
+            }
+        }
+
+        // Clear the renderer
+        SDL_SetRenderDrawColor(render, 0, 0, 0, 255);
+        SDL_RenderClear(render);
+
+        renderImage("images/logo.png",false);
+
+
+        // Blink the text every 500ms
+        Uint32 currentTime = SDL_GetTicks();
+        if (currentTime - lastTextChangeTime >= 500)
+        {
+            lastTextChangeTime = currentTime;
+            showText = !showText;
+        }
+
+        if (showText)
+        {
+            renderText(48, "Press Enter To Continue", 500);
+        }
+
+        SDL_RenderPresent(render);
+
+    }
+}
+
+
 int Menu::showMenu(bool p, bool g, int s1,int s2, int pl,int w)
 {
     paused = p;
@@ -32,6 +104,7 @@ int Menu::showMenu(bool p, bool g, int s1,int s2, int pl,int w)
             {
             case SDL_QUIT:
                 exit(0);
+                break;
             case SDL_KEYDOWN:
                 switch(e.key.keysym.sym)
                 {
@@ -42,6 +115,7 @@ int Menu::showMenu(bool p, bool g, int s1,int s2, int pl,int w)
                     selectedItemIndex=(selectedItemIndex+1)%tempItems.size();
                     break;
                 case SDLK_RETURN:
+                    menuRunning=false;
                     return selectedItemIndex;
                 default:
                     break;
@@ -69,6 +143,7 @@ int Menu::showMenu(bool p, bool g, int s1,int s2, int pl,int w)
                     {
                         if(isPointInRect(mousePosition, textRects[i]))
                         {
+                            menuRunning=false;
                             selectedItemIndex = i;
                             return selectedItemIndex;
                         }
@@ -86,45 +161,47 @@ int Menu::showMenu(bool p, bool g, int s1,int s2, int pl,int w)
 
 }
 
-void Menu::renderMenu()
+void Menu::renderText(int fsize, std::string text, int y)
 {
-    font = TTF_OpenFont("Font/Gagalin.ttf", 36);
-    if(!font)
+    font = TTF_OpenFont("Font/Gagalin.ttf", fsize);
+    if (!font)
     {
-        std::cout<<TTF_GetError();
+        std::cout << "Failed to load font: " << TTF_GetError() << std::endl;
         return;
     }
+
+    textSurface = TTF_RenderText_Solid(font,text.c_str(), textColor);
+    textTexture = SDL_CreateTextureFromSurface(render, textSurface);
+
+    textRect.x = (ScreenW-textSurface->w)/2;;
+    textRect.y = y;
+    textRect.w = textSurface->w;
+    textRect.h = textSurface->h;
+
+    SDL_RenderCopy(render, textTexture,NULL, &textRect);
+
+    SDL_FreeSurface(textSurface);
+    SDL_DestroyTexture(textTexture);
+
+    TTF_CloseFont(font);
+}
+
+
+void Menu::renderMenu()
+{
+
     SDL_SetRenderDrawColor(render, 0,0,0,255);
     SDL_RenderClear(render);
     textRects.clear();
     if(!paused && !gameOver)
     {
-        backSurface = IMG_Load("images/");
-        backTexture = SDL_CreateTextureFromSurface(render, backSurface);
-
-        SDL_RenderCopy(render, backTexture, NULL, NULL);
-
-        SDL_FreeSurface(backSurface);
-        SDL_DestroyTexture(backTexture);
-
-        logoSurface = IMG_Load("images/logo.png");
-        logoTexture = SDL_CreateTextureFromSurface(render, logoSurface);
-
-        logoRect.x =(ScreenW-logoSurface->w)/2;
-        logoRect.y = 50;
-        logoRect.w = logoSurface->w;
-        logoRect.h = logoSurface->h;
-
-        SDL_RenderCopy(render, logoTexture,NULL, &logoRect);
-
-        SDL_FreeSurface(logoSurface);
-        SDL_DestroyTexture(logoTexture);
+        renderImage("images/Space.gif",true);
+        renderImage("images/logo.png",false);
 
     }
 
     if(gameOver)
     {
-        scoreFont = TTF_OpenFont("Font/Gagalin.ttf",96);
         std::string gameOverText;
         if(winner==1)
         {
@@ -140,100 +217,41 @@ void Menu::renderMenu()
         }
 
 
-        logoSurface = TTF_RenderText_Solid(scoreFont,gameOverText.c_str(), textColor);
-        logoTexture = SDL_CreateTextureFromSurface(render, logoSurface);
 
-        logoRect.x =(ScreenW-logoSurface->w)/2;
-        logoRect.y = 50;
-        logoRect.w = logoSurface->w;
-        logoRect.h = logoSurface->h;
-
-        SDL_RenderCopy(render, logoTexture,NULL, &logoRect);
-
-        SDL_FreeSurface(logoSurface);
-        SDL_DestroyTexture(logoTexture);
+        renderText(96,gameOverText,50);
 
         if(player==1)
         {
             std::string scoreText = "YOUR SCORE: " + std::to_string(score1);
-            logoSurface = TTF_RenderText_Solid(scoreFont,scoreText.c_str(), textColor);
-            logoTexture = SDL_CreateTextureFromSurface(render, logoSurface);
 
-            logoRect.x =(ScreenW-logoSurface->w)/2;
-            logoRect.y = 150;
-            logoRect.w = logoSurface->w;
-            logoRect.h = logoSurface->h;
-
-            SDL_RenderCopy(render, logoTexture,NULL, &logoRect);
-
-            SDL_FreeSurface(logoSurface);
-            SDL_DestroyTexture(logoTexture);
+            renderText(96, scoreText,  150);
         }
-        TTF_CloseFont(scoreFont);
 
         if(player==2)
         {
 
-            scoreFont=TTF_OpenFont("Font/Gagalin.ttf",48);
             std::string score1Text = "Player 1 SCORE: " + std::to_string(score1);
-            logoSurface = TTF_RenderText_Solid(scoreFont,score1Text.c_str(), textColor);
-            logoTexture = SDL_CreateTextureFromSurface(render, logoSurface);
-
-            logoRect.x = (ScreenW-logoSurface->w)/2 ;
-            logoRect.y = 150;
-            logoRect.w = logoSurface->w;
-            logoRect.h = logoSurface->h;
-
-            SDL_RenderCopy(render, logoTexture,NULL, &logoRect);
-
-            SDL_FreeSurface(logoSurface);
-            SDL_DestroyTexture(logoTexture);
+            renderText(48, score1Text,  150);
 
             std::string score2Text = "Player 2 SCORE: " + std::to_string(score2);
-            logoSurface = TTF_RenderText_Solid(scoreFont,score2Text.c_str(), textColor);
-            logoTexture = SDL_CreateTextureFromSurface(render, logoSurface);
-
-            logoRect.x =(ScreenW-logoSurface->w)/2;
-            logoRect.y = 200;
-            logoRect.w = logoSurface->w;
-            logoRect.h = logoSurface->h;
-
-            SDL_RenderCopy(render, logoTexture,NULL, &logoRect);
-
-            SDL_FreeSurface(logoSurface);
-            SDL_DestroyTexture(logoTexture);
-            TTF_CloseFont(scoreFont);
+            renderText(48, score2Text,  200);
         }
     }
 
     if(paused)
     {
-
-        scoreFont = TTF_OpenFont("Font/Gagalin.ttf",96);
-        logoSurface = TTF_RenderText_Solid(scoreFont,"PAUSED", textColor);
-        logoTexture = SDL_CreateTextureFromSurface(render, logoSurface);
-
-        logoRect.x =(ScreenW-logoSurface->w)/2;
-        logoRect.y = 50;
-        logoRect.w = logoSurface->w;
-        logoRect.h = logoSurface->h;
-
-        SDL_RenderCopy(render, logoTexture,NULL, &logoRect);
-
-        SDL_FreeSurface(logoSurface);
-        SDL_DestroyTexture(logoTexture);
-
-        TTF_CloseFont(scoreFont);
-
+        renderText(96, "PAUSED",  50);
     }
+
+    font = TTF_OpenFont("Font/Gagalin.ttf", 36);
     for(size_t i=0; i<tempItems.size(); i++)
     {
 
-        menuSurface = TTF_RenderText_Solid(font, tempItems[i].c_str(), int(i) == selectedItemIndex ? selectedColor:textColor);
-        menuTexture = SDL_CreateTextureFromSurface(render, menuSurface);
+        textSurface = TTF_RenderText_Solid(font, tempItems[i].c_str(), int(i) == selectedItemIndex ? selectedColor:textColor);
+        textTexture = SDL_CreateTextureFromSurface(render, textSurface);
 
-        int textWidth = menuSurface->w;
-        int textHeight = menuSurface->h;
+        int textWidth = textSurface->w;
+        int textHeight = textSurface->h;
         int centerX = (ScreenW - textWidth)/2;
         int centerY = (ScreenH - menuItems.size() * 50) / 2 + i * 50;
 
@@ -244,14 +262,12 @@ void Menu::renderMenu()
 
         textRects.push_back(textRect);
 
-        SDL_RenderCopy(render, menuTexture, NULL, &textRect);
+        SDL_RenderCopy(render, textTexture, NULL, &textRect);
 
-
-        SDL_FreeSurface(menuSurface);
-        SDL_DestroyTexture(menuTexture);
+        SDL_FreeSurface(textSurface);
+        SDL_DestroyTexture(textTexture);
 
     }
-
 
 
     SDL_RenderPresent(render);

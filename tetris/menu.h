@@ -23,11 +23,14 @@ private:
     TTF_Font* font, *scoreFont;
     SDL_Color textColor = {255,255,255,255};
     SDL_Color selectedColor = {255,155,100,150};
-    SDL_Surface* menuSurface, *backSurface;
-    SDL_Texture* menuTexture, *backTexture;
-    SDL_Rect textRect, logoRect;
-    SDL_Surface* logoSurface;
-    SDL_Texture* logoTexture;
+    SDL_Surface *imageSurface, *textSurface;
+    SDL_Texture *imageTexture, *textTexture;
+    SDL_Rect textRect, imageRect;
+
+
+    void renderImage(const char* path, bool);
+    SDL_Texture* logoTexture = NULL;
+    void renderText(int size, std::string text,  int y);
     SDL_Point mousePosition; // Store mouse position
 
     bool isPointInRect(const SDL_Point &point, const SDL_Rect &rect)
@@ -42,5 +45,6 @@ public:
     Menu(SDL_Renderer* render):render{render},selectedItemIndex{0} {}
     ~Menu() {}
     int showMenu(bool,bool,int score1=0, int score2=0, int player=1, int winner=0);
+    void startScreen();
 };
 #endif // MENU_H_INCLUDED

@@ -5,7 +5,9 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 #include <string>
+#include "mixer.h"
 
 
 class Tetris
@@ -51,6 +53,7 @@ public:
     int clearLines(int player);
     int total_player;
     int player[3];
+    mixer m1;
 
 private:
     enum {ScreenW = 864, ScreenH = 800 };
@@ -87,13 +90,14 @@ private:
     int dx[3] = {0};
     int n[3];
     bool rotate[3] = {false};
-    unsigned int delay[3] = {1000,1000,1000};
+    unsigned int delay[3] , pDelay[3]={ 0 };
 
     unsigned int tempDelay[3]= {1000,1000,1000};
 
-    int playerScore[3] = {0,0,0}; // Score for players
-    int linesCleared[3] = {0};
-    int playerLevel[3]= {0};
+    int playerScore[3] = {0}; // Score for players
+   int linesCleared[3] = {0};
+   // int Cleared[3]={0};
+    int playerLevel[3]= {1,1,1};
     std::string player2LevelText;
     std::string player1LevelText;
 
@@ -101,7 +105,7 @@ private:
     int powerupStartTime[3];
     bool isPowerupActive[3] = {true, true, true},startPowerup[3] = {true, true, true};
 
-    void increasePlayerScore(int player, int linesCleared);
+    void increasePlayerScore(int player);
     void increasePlayerLevel(int player, int linesCleared);
     void drawScores();
     void showShadow(int player);

@@ -7,6 +7,7 @@
 #include<iostream>
 #include<vector>
 #include<string>
+#include "mixer.h"
 
 class Menu
 {
@@ -40,6 +41,7 @@ private:
     }
     enum {ScreenW = 864, ScreenH = 800 };
     int score1, score2, player, winner;
+    mixer m2;
 
 public:
     Menu(SDL_Renderer* render):render{render},selectedItemIndex{0} {}

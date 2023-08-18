@@ -56,9 +56,9 @@ public:
     mixer m1;
 
 private:
-    enum {ScreenW = 864, ScreenH = 800 };
-    enum {BlockW = 36, BlockH = 36};
-    enum {Lines = 20, Cols = 24};
+    enum {ScreenW = 1920, ScreenH = 1080 };
+    enum {BlockW = 40, BlockH = 40};
+    enum {Lines = 20 +3, Cols = 48};
     SDL_Window* window = NULL;
     SDL_Renderer* render = NULL;
     SDL_Texture* background = NULL, * blocks = NULL, *powerup_img = NULL;

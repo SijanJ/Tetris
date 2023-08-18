@@ -115,15 +115,15 @@ void Tetris::nextTetrimino(int player, bool differentShape)
 
         if(player==2)
         {
-            items[2][i].x = 16 + figures[n[2]][i]% 4;
-            items[2][i].y = int(figures[n[2]][i]/4);
+            items[2][i].x = 37 + figures[n[2]][i]% 4;
+            items[2][i].y = 2+int(figures[n[2]][i]/4);
 
         }
         else
         {
 
-            items[1][i].x = 4 + figures[n[1]][i]% 4;
-            items[1][i].y = int(figures[n[1]][i]/4);
+            items[1][i].x = 8 + figures[n[1]][i]% 4;
+            items[1][i].y =2+ int(figures[n[1]][i]/4);
 
         }
 
@@ -257,7 +257,7 @@ bool Tetris::isShadowValid(int player, const Point shadowItems[3][8])
     {
         if(player==1)
         {
-            if (shadowItems[1][i].x < 1 || shadowItems[1][i].x >= 11 || shadowItems[1][i].y >= Lines)
+            if (shadowItems[1][i].x < 5 || shadowItems[1][i].x >= 15 || shadowItems[1][i].y >= Lines)
             {
                 return false;
             }
@@ -269,7 +269,7 @@ bool Tetris::isShadowValid(int player, const Point shadowItems[3][8])
 
         else
         {
-            if (shadowItems[2][i].x < 13 || shadowItems[2][i].x >= 23 || shadowItems[2][i].y >= Lines)
+            if (shadowItems[2][i].x < 33 || shadowItems[2][i].x >= 43 || shadowItems[2][i].y >= Lines)
             {
                 return false;
             }
@@ -283,13 +283,14 @@ bool Tetris::isShadowValid(int player, const Point shadowItems[3][8])
     return true;
 }
 
+
 bool Tetris::isvalid(int player)
 {
     if(player==1)
     {
         for(int i=0; i<8; i++)
         {
-            if(items[1][i].x < 1 || items[1][i].x >=11 || items[1][i].y >= Lines){
+            if(items[1][i].x < 5 || items[1][i].x >=15 || items[1][i].y >= Lines){
 
                 m1.playSound(3);
                 return false;
@@ -307,7 +308,7 @@ bool Tetris::isvalid(int player)
     {
         for(int i=0; i<8; i++)
         {
-            if(items[2][i].x < 13 || items[2][i].x >=23 || items[2][i].y >= Lines){
+            if(items[2][i].x < 33 || items[2][i].x >=43 || items[2][i].y >= Lines){
                     m1.playSound(3);
                 return false;
             }
@@ -339,12 +340,12 @@ void Tetris::showShadow(int player)
         }
     }
 
-    if(shadowItems[1][1].y == 1)
+    if(shadowItems[1][1].y == 3)
     {
         isGameOver[0] = true;
         SDL_Delay(500);
     }
-    if(shadowItems[2][1].y == 1)
+    if(shadowItems[2][1].y == 3)
     {
         isGameOver[1] = true;
         SDL_Delay(500);
@@ -587,7 +588,7 @@ int Tetris::clearLines(int player)
         {
 
             bool lineComplete = true;
-            for (int j = 1; j < 11; j++)
+            for (int j = 5; j < 15; j++)
             {
                 if (field[i][j] == 0)
                 {
@@ -604,13 +605,13 @@ int Tetris::clearLines(int player)
                 // Clear the line and shift other lines down.
                 for (int k = i; k > 0; k--)
                 {
-                    for (int j = 1; j < 11; j++)
+                    for (int j = 5; j < 15; j++)
                     {
                         field[k][j] = field[k - 1][j];
                     }
                 }
                 // Clear the top line.
-                for (int j = 1; j < 11; j++)
+                for (int j = 5; j < 15; j++)
                 {
                     field[0][j] = 0;
                 }
@@ -626,7 +627,7 @@ int Tetris::clearLines(int player)
         for (int i = 2; i < Lines; i++)
         {
             bool lineComplete = true;
-            for (int j = 13; j < 23; j++)
+            for (int j = 33; j < 43; j++)
             {
                 if (field[i][j] == 0)
                 {
@@ -642,13 +643,13 @@ int Tetris::clearLines(int player)
                 // Clear the line and shift other lines down.
                 for (int k = i; k > 0; k--)
                 {
-                    for (int j = 13; j < 23; j++)
+                    for (int j = 33; j < 43; j++)
                     {
                         field[k][j] = field[k - 1][j];
                     }
                 }
                 // Clear the top line.
-                for (int j = 13; j < 23; j++)
+                for (int j = 33; j < 43; j++)
                 {
                     field[0][j] = 0;
                 }
@@ -688,24 +689,24 @@ void Tetris::increasePlayerLevel(int player, int Cleared)
 
             if(player ==1 )
             {
-                powerup_x[1] = 1+ rand()% 10; //randomize power up spawn point
-                powerup_y[1] = 4+rand() % 10;
+                powerup_x[1] = 5+ rand()% 10; //randomize power up spawn point
+                powerup_y[1] = 7+rand() % 10;
 
                 while(field[powerup_x[1]][powerup_y[1]]!=0) //check vacant field
                 {
-                    powerup_x[1] = 1+ rand()% 10;
-                    powerup_y[1] = 4+rand() % 10;
+                    powerup_x[1] = 5+ rand()% 10;
+                    powerup_y[1] = 7+rand() % 10;
                 }
             }
             else if(player ==2)
             {
-                powerup_x[2] = 13+ rand()% 10;
-                powerup_y[2] = 4+rand() % 10;
+                powerup_x[2] = 33+ rand()% 10;
+                powerup_y[2] = 7+rand() % 10;
 
                 while(field[powerup_x[2]][powerup_y[2]]!=0)
                 {
-                    powerup_x[2] = 13+ rand()% 10;
-                    powerup_y[2] = 4+rand() % 10;
+                    powerup_x[2] = 33+ rand()% 10;
+                    powerup_y[2] = 7+rand() % 10;
                 }
             }
             powerupStartTime[player] = currentTime[player];

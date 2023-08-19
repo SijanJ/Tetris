@@ -120,6 +120,7 @@ int Menu::showMenu(bool p, bool g, int s1,int s2, int pl,int w)
                 case SDLK_RETURN:
                     if(selectedItemIndex == 1 || selectedItemIndex==2)
                         Mix_RewindMusic();
+                    if(selectedItemIndex !=3)
                     Mix_ResumeMusic();
                     menuRunning=false;
                     return selectedItemIndex;

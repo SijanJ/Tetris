@@ -43,7 +43,7 @@ public:
     void nextTetrimino(int player_no, bool differentShape = false);
     void handleEvents();
     void setPosRect(SDL_Rect& rect, int x=0, int y=0, int w=BlockW, int h = BlockH);
-    void moveRectPos(SDL_Rect& rect,int x, int y);
+   // void moveRectPos(SDL_Rect& rect,int x, int y);
     void gameplay();
     void pauseMenuOptions(int);
     void updateRender();
@@ -61,7 +61,7 @@ private:
     enum {Lines = 20 +3, Cols = 48};
     SDL_Window* window = NULL;
     SDL_Renderer* render = NULL;
-    SDL_Texture* background = NULL, * blocks = NULL, *powerup_img = NULL;
+    SDL_Texture* background = NULL, * blocks = NULL, *powerup_img = NULL, *small_blocks = NULL;
     SDL_Texture* player1LevelTexture=NULL, * player2LevelTexture=NULL;
     SDL_Surface* player1LevelSurface=NULL, *player2LevelSurface=NULL;
     SDL_Rect srcR = {0,0, BlockW, BlockH}, destR= {0,0, BlockW, BlockH};
@@ -84,11 +84,12 @@ private:
     struct Point
     {
         int x,y;
-    } items[3][8],backup[3][8],shadowItems[3][8];
+    } items[3][8],backup[3][8],shadowItems[3][8], nextItem[3][4];
 
     int color[3] = {1,3,4};
     int dx[3] = {0};
     int n[3];
+    int nextT[3]={0,rand()%7,rand()%7};
     bool rotate[3] = {false};
     unsigned int delay[3] , pDelay[3]={ 0 };
 
@@ -110,6 +111,7 @@ private:
     void drawScores();
     void showShadow(int player);
     bool isShadowValid(int player, const Point shadowItems[3][8]);
+    void showNextpiece(int player);
     void powerup(int player_no, int powerup_no);
     Uint32 startTime[3]= {0}, currentTime[3] = {0};
 

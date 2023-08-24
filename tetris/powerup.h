@@ -1,5 +1,4 @@
-#include <SDL2/SDL.h>
-#include<SDL2/SDL_image.h>
+
 
 void Tetris::powerup(int player_no, int powerup_no)
 {
@@ -10,7 +9,7 @@ if(total_player==1)
 if(player_no == 1)
 {
     setPosRect(destR, BlockW*powerup_x[1], BlockH*powerup_y[1], BlockH, BlockW); //powerup image rendering
-    SDL_RenderCopy(render, powerup_img, NULL, &destR);
+    renderCopy(render, powerup_img, NULL, &destR);
 
 
 
@@ -41,8 +40,9 @@ case 3:
         for(int j=5; j<15; j++)
             field[i][j]=1;
     }
-    linesCleared[1]-=4;
+    linesCleared[1]=-4;
     playerScore[1]-=100;
+
 
 
     isPowerupActive[1]=false;
@@ -57,7 +57,7 @@ else // for player 2
 {
 
 setPosRect(destR, BlockW*powerup_x[2], BlockH*powerup_y[2], BlockH, BlockW);
-SDL_RenderCopy(render, powerup_img, NULL, &destR);
+renderCopy(render, powerup_img, NULL, &destR);
 
 
 if(currentTime[2] - powerupStartTime[2]> 5000)
@@ -83,12 +83,13 @@ case 2:
     powerup_x[2] = -1;
     break;
 case 3:
+
     for(int i=Lines-1; i>Lines-5; i--){
         for(int j=33; j<43; j++)
             field[i][j]=1;
     }
-    linesCleared[2]-=4;
-    playerScore[2]-=100;
+    linesCleared[2]=-4;
+playerScore[2]-=100;
 
 
     isPowerupActive[2]=false;

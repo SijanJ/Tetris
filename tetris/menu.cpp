@@ -27,7 +27,7 @@ void Menu::startScreen()
     bool showText = true;
     Uint32 lastTextChangeTime = getTicks();
     bool startScreenRunning = true;
-    setRenderDrawColor(render, 0, 0, 0, 255);
+    setRenderDrawColor(render, 150, 150, 150, 255);
     renderClear(render);
 
     while (startScreenRunning)
@@ -49,7 +49,7 @@ void Menu::startScreen()
         }
 
         // Clear the renderer
-        setRenderDrawColor(render, 0, 0, 0, 255);
+        setRenderDrawColor(render, 150, 150, 150, 255);
         renderClear(render);
 
         renderImage("images/logo.png",false);
@@ -215,10 +215,10 @@ void Menu::renderMenu()
     setRenderDrawColor(render, 0,0,0,255);
     renderClear(render);
     textRects.clear();
-    renderImage("images/Geometry.png",true);
+    renderImage("images/BG.png",true);
     if(!paused && !gameOver)
     {
-        renderImage("images/Space.gif",true);
+        //renderImage("images/Space.gif",true);
         renderImage("images/logo.png",false);
 
     }

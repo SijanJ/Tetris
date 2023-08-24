@@ -50,7 +50,6 @@ public:
     mixer m1;
 
 private:
-    //SDL sdl;
     enum {ScreenW = 1920, ScreenH = 1080 };
     enum {BlockW = 40, BlockH = 40};
     enum {Lines = 20 +3, Cols = 48};
@@ -92,7 +91,6 @@ private:
 
     int playerScore[3] = {0}; // Score for players
    int linesCleared[3] = {0};
-   // int Cleared[3]={0};
     int playerLevel[3]= {1,1,1};
     std::string player2LevelText;
     std::string player1LevelText;
@@ -109,7 +107,7 @@ private:
     void showNextpiece(int player);
     void powerup(int player_no, int powerup_no);
     Uint32 startTime[3]= {0}, currentTime[3] = {0};
-    //SDL sdl;
+
 
 };
 

@@ -1,11 +1,6 @@
 #ifndef TETRIS_H_INCLUDED
 #define TETRIS_H_INCLUDED
 
-
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_mixer.h>
 #include <string>
 #include "mixer.h"
 #include "SDL.hpp"

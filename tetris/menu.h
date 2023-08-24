@@ -20,8 +20,8 @@ private:
     void renderMenu();
     bool paused, gameOver;
     Font* font, *scoreFont;
-    Color textColor = {255,255,255,255};
-    Color selectedColor = {255,155,100,150};
+    Color textColor = {0,0,0,255};
+    Color selectedColor = {161,28,28,150};
     Surface *imageSurface, *textSurface;
     Texture *imageTexture, *textTexture;
     Rect textRect, imageRect;

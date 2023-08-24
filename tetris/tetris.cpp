@@ -117,14 +117,14 @@ void Tetris::nextTetrimino(int player, bool differentShape)
         if(player==2)
         {
             items[2][i].x = 37 + figures[n[2]][i]% 4;
-            items[2][i].y = 2+int(figures[n[2]][i]/4);
+            items[2][i].y = 3+int(figures[n[2]][i]/4);
 
         }
         else
         {
 
             items[1][i].x = 8 + figures[n[1]][i]% 4;
-            items[1][i].y =2+ int(figures[n[1]][i]/4);
+            items[1][i].y =3+ int(figures[n[1]][i]/4);
 
         }
 
@@ -701,7 +701,7 @@ void Tetris::increasePlayerLevel(int player, int Cleared)
     }
      if(playerLevel[player]>1 && isPowerupActive[player])  //powerup enable at even level no.
     {
-        //int powerup_no[3];
+
         if(startPowerup[player] )  // runs only one time per powerup
         {
 
@@ -733,7 +733,7 @@ void Tetris::increasePlayerLevel(int player, int Cleared)
 
         }
 
-        powerup(player, 1+rand()%3);
+        powerup(player, 1 + rand()%3);
 
     }
 
@@ -767,7 +767,7 @@ void Tetris::drawScores()
 
     //Render level for player 1
     std::string player1LevelText =  std::to_string(playerLevel[1]);
-    renderText(player1LevelText,775,375);
+    renderText(player1LevelText,795,375);
     if(total_player==1){
             std::string offlineText = "PLAYER 2 OFFLINE";
 
@@ -778,11 +778,11 @@ void Tetris::drawScores()
     {
         // Render the score for Player 2
         std::string player2ScoreText =  std::to_string(playerScore[2]);
-        renderText(player2ScoreText,1080,140);
+        renderText(player2ScoreText,1090,140);
 
         //Render level for player 2
         std::string player2LevelText = std::to_string(playerLevel[2]);
-        renderText(player2LevelText,1080,375);
+        renderText(player2LevelText,1110,375);
     }
 
 }

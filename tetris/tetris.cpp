@@ -467,7 +467,7 @@ void Tetris::resetGame()
         playerLevel[player] = 1;
         isGameOver[player]=false;
         rewindMusic();
-        // Reset other relevant variables
+        linesCleared[player]=0;
         nextTetrimino(player, false); // Reset the next tetriminos
         // Clear the field and initialize it again
         clearField(player);

@@ -23,54 +23,50 @@ bool Tetris::init(const char* title)
 {
 
     //Initialize everything
-    if(SDL_Init(SDL_INIT_EVERYTHING)==0)
+
+    if(initialize()==0)
     {
-        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY,"1");
-        window = SDL_CreateWindow("tetris", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, ScreenW, ScreenH, SDL_WINDOW_SHOWN);
-        if (window != NULL)
+        window = createWindow("tetris", WindowPosUndefined, WindowPosUndefined, ScreenW, ScreenH, WINDOWSHOWN);
+        if (window!= NULL)
         {
-            render = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+            render = createRenderer(window, -1, RendererAccelerated);
             if(render!=NULL)
             {
-                SDL_SetRenderDrawColor(render,255, 255, 255, 255);
-                int imgFlags = IMG_INIT_PNG;
+                setRenderDrawColor(render,255, 255, 255, 255);
+                int imgFlags = InitPNG;
 
-                int initted = IMG_Init(imgFlags);
+                int initted = initImage(imgFlags);
                 if((initted & imgFlags) != imgFlags)
                 {
-                    std::cout<<"Failed to init required png support\n"<<"IMG_Init()Error: "<<IMG_GetError()<<std::endl;
+                    std::cout<<"Failed to init required png support\n"<<std::endl;
                 }
-                if (TTF_Init() == -1)
+                if (TTFInit() == -1)
                 {
-                    std::cerr << "SDL_ttf could not be initialized: " << TTF_GetError() << std::endl;
-                    // Handle the error or return false.
+                    std::cerr << "SDL_ttf could not be initialized: "  << std::endl;
                 }
+                 initMusic();
+                Surface* loadSurf = loadImage("images/Background.png");
+                background = createTextureFromSurface(render, loadSurf);
+                freeSurface(loadSurf);
+                loadSurf = loadImage("images/blocks.png");
+                blocks = createTextureFromSurface(render, loadSurf);
+                freeSurface(loadSurf);
+                loadSurf = loadImage("images/small_blocks.png");
+                small_blocks = createTextureFromSurface(render, loadSurf);
+                freeSurface(loadSurf);
 
-                m1.initMixer();
-
-                SDL_Surface* loadSurf = IMG_Load("images/Background.png");
-                background = SDL_CreateTextureFromSurface(render, loadSurf);
-                SDL_FreeSurface(loadSurf);
-                loadSurf = IMG_Load("images/blocks.png");
-                blocks = SDL_CreateTextureFromSurface(render, loadSurf);
-                SDL_FreeSurface(loadSurf);
-                loadSurf = IMG_Load("images/small_blocks.png");
-                small_blocks = SDL_CreateTextureFromSurface(render, loadSurf);
-                SDL_FreeSurface(loadSurf);
-
-                font = TTF_OpenFont("Font/Gagalin.ttf", 24);
+                font = openFont("Font/Gagalin.ttf", 50);
                 if (!font)
                 {
                     std::cerr << "Failed to load font: " << TTF_GetError() << std::endl;
-                    // Handle the error or return.
                 }
 
-                loadSurf = IMG_Load("images/powerup.png");
-                powerup_img = SDL_CreateTextureFromSurface(render, loadSurf);
-                SDL_FreeSurface(loadSurf);
+                loadSurf = loadImage("images/powerup.png");
+                powerup_img = createTextureFromSurface(render, loadSurf);
+                freeSurface(loadSurf);
 
                 m1.playMusic("sound/Tetris.mp3");
-                 Mix_PauseMusic();
+                 pauseMusic();
                  m1.load_AllSound();
 
                 nextTetrimino(1);
@@ -93,7 +89,7 @@ int Tetris::showPauseMenu()
 {
     Menu pauseMenu(render);
     paused = true;
-    int selectedOption = pauseMenu.showMenu(paused,isGameOver[0]||isGameOver[1]);
+    int selectedOption = pauseMenu.showMenu(paused,isGameOver[1]||isGameOver[2]);
     paused = false;
     return selectedOption;
 }
@@ -141,12 +137,12 @@ void Tetris::showNextpiece(int player)
 for(int i=0; i<4; i++)
 {
     if(player==1){
-    nextItem[1][i].x = 1 + figures[nextT[1]][i] % 4;
-    nextItem[1][i].y = 8 + int(figures[nextT[1]][i]/4);
+    nextItem[1][i].x = figures[nextT[1]][i] % 4;
+    nextItem[1][i].y = int(figures[nextT[1]][i]/4);
     }
     else if(player==2){
-        nextItem[2][i].x = 59 + figures[nextT[2]][i] % 4;
-    nextItem[2][i].y = 8 + int(figures[nextT[2]][i]/4);
+        nextItem[2][i].x = figures[nextT[2]][i] % 4;
+    nextItem[2][i].y =int(figures[nextT[2]][i]/4);
     }
 }
 
@@ -155,17 +151,17 @@ for(int i=0; i<4; i++)
 void Tetris::handleEvents()
 {
 
-    SDL_Event e;
+    Event e;
 
     //Get the players key input
-    while(SDL_PollEvent(&e))
+    while(pollEvent(e))
     {
         switch (e.type)
         {
-        case SDL_QUIT:
+        case QUIT:
             running = false;
             break;
-        case SDL_KEYDOWN:
+        case KEY_DOWN:
 
                 int x;
                 if(total_player==1)
@@ -174,69 +170,67 @@ void Tetris::handleEvents()
                    x=2;
             switch(e.key.keysym.sym)
             {
-            case SDLK_UP:
+            case UP:
                 rotate[x] = true;
                 m1.playSound(0);
                 break;
-            case SDLK_LEFT:
+            case LEFT:
                 dx[x] = -1;
                 m1.playSound(0);
                 break;
-            case SDLK_RIGHT:
+            case RIGHT:
                 dx[x] = 1;
                 m1.playSound(0);
                 break;
-            case SDLK_DOWN:
+            case DOWN:
                 delay[x] = 50;
                 m1.playSound(0);
                 break;
-            case SDLK_RSHIFT:
+            case RSHIFT:
                 hardDrop(x);
                 m1.playSound(1);
                 break;
-            case SDLK_w:
+            case W:
                 rotate[1] = true;
                 m1.playSound(0);
                 break;
-            case SDLK_a:
+            case A:
                 dx[1] = -1;
                 m1.playSound(0);
                 break;
-            case SDLK_d:
+            case D:
                 dx[1] = 1;
                 m1.playSound(0);
                 break;
-            case SDLK_s:
+            case S:
                 delay[1] = 50;
                 m1.playSound(0);
                 break;
-            case SDLK_LSHIFT:
+            case LSHIFT:
                 hardDrop(1);
                 m1.playSound(1);
                 break;
-            case SDLK_ESCAPE:
-                Mix_PauseMusic();
+            case ESC:
+                pauseMusic();
                 paused = true;
+                break;
+            case M:
+                m1.toggleVolume();
+                break;
             }
         }
     }
-    const Uint8* state =SDL_GetKeyboardState(NULL);
-    if(state[SDL_SCANCODE_DOWN])
+    const Uint8* state =getKeyboardState(NULL);
+    if(state[SCANCODE_DOWN])
         delay[2]=50;
 
-    if(state[SDL_SCANCODE_S])
+    if(state[SCANCODE_S])
         delay[1]=50;
 }
-void Tetris::setPosRect(SDL_Rect& rect, int x, int y, int w, int h)
+void Tetris::setPosRect(Rect& rect, int x, int y, int w, int h)
 {
     rect= {x,y,w,h};
 }
-
-//void Tetris::moveRectPos(SDL_Rect& rect, int x, int y)
-//{
-  //  rect.x+=x;
-    //rect.y+=y;
-//}
 
 void Tetris::hardDrop(int player)
 {
@@ -261,13 +255,6 @@ void Tetris::hardDrop(int player)
 
     color[player] = 1 + rand() % 7;
     nextTetrimino(player);
-
-    //if (tempDelay[player] > 100)
-  //  {
- //       increasePlayerLevel(player, linesCleared[player]);
-    //}
-
-//    showShadow(player);
 
 
 }
@@ -364,12 +351,12 @@ void Tetris::showShadow(int player)
 
     if(shadowItems[1][1].y == 3)
     {
-        isGameOver[0] = true;
+        isGameOver[1] = true;
         SDL_Delay(500);
     }
     if(shadowItems[2][1].y == 3)
     {
-        isGameOver[1] = true;
+        isGameOver[2] = true;
         SDL_Delay(500);
     }
     for (int i = 0; i < 8; i++)
@@ -383,21 +370,23 @@ int Tetris::gameOver()
 
     int selectedOption;
     Menu game(render);
-    if(isGameOver[0])
+    if(isGameOver[1])
     {
         if(total_player==2)
-            selectedOption = game.showMenu(paused,isGameOver[0],playerScore[0],playerScore[2],total_player,2);
+            selectedOption = game.showMenu(paused,isGameOver[1],playerScore[1],playerScore[2],total_player,2);
         else
-            selectedOption = game.showMenu(paused,isGameOver[0],playerScore[1]);
-        isGameOver[0]=false;
-    }
-    else
-    {
-        selectedOption = game.showMenu(paused,isGameOver[1], playerScore[1],playerScore[2],total_player,1);
+            selectedOption = game.showMenu(paused,isGameOver[1],playerScore[1]);
         isGameOver[1]=false;
+        resetGame();
+    }
+    if(isGameOver[2])
+    {
+        selectedOption = game.showMenu(paused,isGameOver[2], playerScore[1],playerScore[2],total_player,1);
+        isGameOver[2]=false;
+        resetGame();
     }
 
-
+    //resetGame();
     return selectedOption;
 }
 void Tetris::pauseMenuOptions(int option)
@@ -411,7 +400,7 @@ void Tetris::pauseMenuOptions(int option)
         resetGame();
         break;
     case 2:
-        total_player=mainMenu.showMenu(paused, isGameOver[0]||isGameOver[1])+1;
+        total_player=mainMenu.showMenu(paused, isGameOver[1]||isGameOver[2])+1;
         if(total_player==1||total_player==2)
         {
             resetGame();
@@ -441,12 +430,12 @@ void Tetris::gameOverMenuOptions(int option)
         total_player=1;
         break;
     case 1:
-        resetGame();
+       resetGame();
         total_player=2;
         break;
     case 2:
-        resetGame();
-        total_player=mainMenu.showMenu(paused, isGameOver[0]||isGameOver[1])+1;
+        //resetGame();
+        total_player=mainMenu.showMenu(paused, isGameOver[1]||isGameOver[2])+1;
        if(total_player==1||total_player==2)
         {
             resetGame();
@@ -455,8 +444,9 @@ void Tetris::gameOverMenuOptions(int option)
        {
            running=false;
             exit(0);
+            break;
         }
-        resetGame();
+
         break;
     case 3:
         running=false;
@@ -471,12 +461,12 @@ void Tetris::resetGame()
 {
     // Reset game-related variables, fields, scores, levels, etc.
     // For example:
-    for (int player = 1; player <= total_player; player++)
+    for (int player = 1; player <= 2; player++)
     {
         playerScore[player] = 0;
         playerLevel[player] = 1;
-        isGameOver[player-1]=false;
-        Mix_RewindMusic();
+        isGameOver[player]=false;
+        rewindMusic();
         // Reset other relevant variables
         nextTetrimino(player, false); // Reset the next tetriminos
         // Clear the field and initialize it again
@@ -501,13 +491,13 @@ void Tetris::clearField(int player)
 
 void Tetris::gameplay()
 {
-    SDL_RenderCopy(render, background, NULL, NULL);
-    if(paused && (!isGameOver[0] || !isGameOver[1]))
+    renderCopy(render, background, NULL, NULL);
+    if(paused && (!isGameOver[1] || !isGameOver[2]))
     {
         int selectedOption = showPauseMenu();
         pauseMenuOptions(selectedOption);
     }
-    if(isGameOver[0]||isGameOver[1])
+    if(isGameOver[1]||isGameOver[2])
     {
         int selectedOption = gameOver();
         gameOverMenuOptions(selectedOption);
@@ -711,7 +701,7 @@ void Tetris::increasePlayerLevel(int player, int Cleared)
     }
      if(playerLevel[player]>1 && isPowerupActive[player])  //powerup enable at even level no.
     {
-        int powerup_no[3];
+        //int powerup_no[3];
         if(startPowerup[player] )  // runs only one time per powerup
         {
 
@@ -743,22 +733,16 @@ void Tetris::increasePlayerLevel(int player, int Cleared)
 
         }
 
-        powerup(player, 3);
+        powerup(player, 1+rand()%3);
 
     }
-   // if(playerLevel[player]%2 == 1 )   //reset for next level powerup
-   // {
-      //  isPowerupActive[player] = true;
-      //  startPowerup[player] = true;
 
-
-   // }
 }
 void Tetris::renderText(std::string text, int x, int y)
 {
 
-    SDL_Surface* playerSurface = TTF_RenderText_Solid(font, text.c_str(), textColor);
-    SDL_Texture* playerTexture = SDL_CreateTextureFromSurface(render, playerSurface);
+    Surface* playerSurface = renderTextSolid(font, text.c_str(), textColor);
+    Texture* playerTexture = createTextureFromSurface(render, playerSurface);
 
     //Set the position for text
     playerRect.x = x;
@@ -767,33 +751,38 @@ void Tetris::renderText(std::string text, int x, int y)
     playerRect.h = playerSurface ->h;
 
     //Render Text On Screen
-    SDL_RenderCopy(render, playerTexture, NULL, &playerRect);
+    renderCopy(render, playerTexture, NULL, &playerRect);
 
     //Clean Up Resources after rendering text
-    SDL_FreeSurface(playerSurface);
-    SDL_DestroyTexture(playerTexture);
+    freeSurface(playerSurface);
+    destroyTexture(playerTexture);
 }
 
 
 void Tetris::drawScores()
 {
     // Render the score for Player 1
-    std::string player1ScoreText = "Player 1 Score: " + std::to_string(playerScore[1]);
-    renderText(player1ScoreText,10,10);
+    std::string player1ScoreText =  std::to_string(playerScore[1]);
+    renderText(player1ScoreText,775,140);
 
     //Render level for player 1
-    std::string player1LevelText = "Player 1 Level: " + std::to_string(playerLevel[1]);
-    renderText(player1LevelText,10,50);
+    std::string player1LevelText =  std::to_string(playerLevel[1]);
+    renderText(player1LevelText,775,375);
+    if(total_player==1){
+            std::string offlineText = "PLAYER 2 OFFLINE";
+
+            renderText(offlineText,1330, 500 );
+    }
 
     if(total_player==2)
     {
         // Render the score for Player 2
-        std::string player2ScoreText = "Player 2 Score: " + std::to_string(playerScore[2]);
-        renderText(player2ScoreText,500,10);
+        std::string player2ScoreText =  std::to_string(playerScore[2]);
+        renderText(player2ScoreText,1080,140);
 
         //Render level for player 2
-        std::string player2LevelText = "Player 2 Level: " + std::to_string(playerLevel[2]);
-        renderText(player2LevelText,500,50);
+        std::string player2LevelText = std::to_string(playerLevel[2]);
+        renderText(player2LevelText,1080,375);
     }
 
 }
@@ -808,11 +797,11 @@ void Tetris::updateRender()
             setPosRect(destR, shadowItems[player][j].x * BlockW, shadowItems[player][j].y * BlockH);
 
 
-            SDL_SetTextureAlphaMod(blocks, 25); //
-            SDL_RenderCopy(render, blocks, &srcR, &destR);
+            setTextureAlphaMod(blocks, 25); //
+            renderCopy(render, blocks, &srcR, &destR);
 
             // Restore full alpha for subsequent rendering
-            SDL_SetTextureAlphaMod(blocks, 255); // Set alpha to 255 (fully opaque)
+            setTextureAlphaMod(blocks, 255); // Set alpha to 255 (fully opaque)
         }
         for(int i=0; i<Lines ; i++)
             for(int j=0; j < Cols; j++)
@@ -820,7 +809,7 @@ void Tetris::updateRender()
                 {
                     setPosRect(srcR, field[i][j] * BlockW);
                     setPosRect(destR, j*BlockW, i*BlockH);
-                    SDL_RenderCopy(render, blocks, &srcR, &destR );
+                    renderCopy(render, blocks, &srcR, &destR );
                 }
 
         for(int i=0; i<8; i++)
@@ -828,40 +817,42 @@ void Tetris::updateRender()
             setPosRect(srcR, color[player] *  BlockW);
             setPosRect(destR, items[player][i].x* BlockW, items[player][i].y*BlockH);
 
-            SDL_RenderCopy(render,blocks, &srcR, &destR);
+            renderCopy(render,blocks, &srcR, &destR);
         }
 
-        for(int i=0; i<4; i++)
+       for(int i=0; i<4; i++)
         {
             setPosRect(srcR, (1 + nextT[player])*30, 0, 30,30 );
-            setPosRect(destR, nextItem[player][i].x*30, nextItem[player][i].y*30, 30,30);
+            if(player==1)
+            setPosRect(destR, 30 + nextItem[player][i].x*30, 160 + nextItem[player][i].y*30, 30,30);
+            if(player==2)
+                setPosRect(destR, 1790 + nextItem[player][i].x*30, 160 + nextItem[player][i].y*30, 30,30);
             SDL_RenderCopy(render, small_blocks, &srcR, &destR);
         }
-
         drawScores();
 
     }
-    SDL_RenderPresent(render);
+    renderPresent(render);
 
 }
 
 void Tetris::clean()
 {
     resetGame();
-    SDL_DestroyTexture(blocks);
-    SDL_DestroyTexture(background);
-    SDL_DestroyTexture(powerup_img);
+    destroyTexture(blocks);
+    destroyTexture(background);
+    destroyTexture(powerup_img);
 
     // Close the font after use
-    TTF_CloseFont(font);
+    closeFont(font);
 
 
-    SDL_DestroyRenderer(render);
-    SDL_DestroyWindow(window);
+    destroyRenderer(render);
+    destroyWindow(window);
 
-    IMG_Quit();
-    TTF_Quit();
+    imageQuit();
+    TTFQuit();
     m1.quitMixer();
 
-    SDL_Quit();
+    SDLQuit();
 }

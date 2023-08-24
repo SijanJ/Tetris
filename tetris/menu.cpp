@@ -3,44 +3,45 @@
 
 void Menu::renderImage(const char* path, bool background)
 {
-    imageSurface = IMG_Load(path);
-    imageTexture = SDL_CreateTextureFromSurface(render, imageSurface);
+    imageSurface = loadImage(path);
+    imageTexture = createTextureFromSurface(render, imageSurface);
+    //imageTexture = loadTexture(path, render);
     if(!background)
     {
         imageRect.x = (ScreenW - imageSurface->w) / 2;
         imageRect.y = 50;
         imageRect.w = imageSurface->w;
         imageRect.h = imageSurface->h;
-        SDL_RenderCopy(render, imageTexture, NULL, &imageRect);
+        renderCopy(render, imageTexture, NULL, &imageRect);
     }
     else
     {
-        SDL_RenderCopy(render, imageTexture, NULL, NULL);
+        renderCopy(render, imageTexture, NULL, NULL);
     }
-    SDL_FreeSurface(imageSurface);
-    SDL_DestroyTexture(imageTexture);
+    freeSurface(imageSurface);
+    destroyTexture(imageTexture);
 }
 
 void Menu::startScreen()
 {
     bool showText = true;
-    Uint32 lastTextChangeTime = SDL_GetTicks();
+    Uint32 lastTextChangeTime = getTicks();
     bool startScreenRunning = true;
-    SDL_SetRenderDrawColor(render, 0, 0, 0, 255);
-    SDL_RenderClear(render);
+    setRenderDrawColor(render, 0, 0, 0, 255);
+    renderClear(render);
 
     while (startScreenRunning)
     {
-        SDL_Event e;
-        while (SDL_PollEvent(&e))
+        Event e;
+        while (pollEvent(e))
         {
-            if (e.type == SDL_QUIT)
+            if (e.type == QUIT)
             {
                 exit(0);
             }
-            if (e.type == SDL_KEYDOWN)
+            if (e.type == KEY_DOWN)
             {
-                if (e.key.keysym.sym == SDLK_RETURN)
+                if (e.key.keysym.sym == ENTER)
                 {
                     return;
                 }
@@ -48,14 +49,14 @@ void Menu::startScreen()
         }
 
         // Clear the renderer
-        SDL_SetRenderDrawColor(render, 0, 0, 0, 255);
-        SDL_RenderClear(render);
+        setRenderDrawColor(render, 0, 0, 0, 255);
+        renderClear(render);
 
         renderImage("images/logo.png",false);
 
 
         // Blink the text every 500ms
-        Uint32 currentTime = SDL_GetTicks();
+        Uint32 currentTime = getTicks();
         if (currentTime - lastTextChangeTime >= 500)
         {
             lastTextChangeTime = currentTime;
@@ -67,7 +68,7 @@ void Menu::startScreen()
             renderText(48, "Press Enter To Continue", 500);
         }
 
-        SDL_RenderPresent(render);
+        renderPresent(render);
 
     }
 }
@@ -83,7 +84,7 @@ int Menu::showMenu(bool p, bool g, int s1,int s2, int pl,int w)
     winner=w;
     gameOver = g;
     bool menuRunning = true;
-    SDL_Event e;
+    Event e;
     if(!paused && !gameOver)
     {
         tempItems=menuItems;
@@ -100,37 +101,41 @@ int Menu::showMenu(bool p, bool g, int s1,int s2, int pl,int w)
     while(menuRunning)
     {
         if(menuRunning)
-            Mix_PauseMusic();
-        while(SDL_PollEvent(&e))
+            pauseMusic();
+        while(pollEvent(e))
         {
             switch(e.type)
             {
-            case SDL_QUIT:
+            case QUIT:
                 exit(0);
                 break;
-            case SDL_KEYDOWN:
+            case KEY_DOWN:
                 switch(e.key.keysym.sym)
                 {
-                case SDLK_UP:
+                case UP:
                     selectedItemIndex=(selectedItemIndex-1+tempItems.size())%tempItems.size();
                     break;
-                case SDLK_DOWN:
+                case DOWN:
                     selectedItemIndex=(selectedItemIndex+1)%tempItems.size();
                     break;
-                case SDLK_RETURN:
-                    if(selectedItemIndex == 1 || selectedItemIndex==2)
-                        Mix_RewindMusic();
-                    if(selectedItemIndex !=3)
-                    Mix_ResumeMusic();
+                case ENTER:
+                    if((selectedItemIndex == 1 && paused)||(((selectedItemIndex==0&&!paused)||selectedItemIndex==1)))
+                          {
+                              rewindMusic();
+                              resumeMusic();
+                          }
+                    if(selectedItemIndex == 0 && paused)
+                            resumeMusic();
+                        if(selectedItemIndex == 2 && paused)
+                                rewindMusic();
+
                     menuRunning=false;
                     return selectedItemIndex;
-                case SDLK_m:
-                   m2.toggleVolume();
-                  break;
+
                 default:
                     break;
                 }
-            case SDL_MOUSEMOTION:
+            case MOUSE_MOTION:
                 mousePosition.x = e.motion.x;
                 mousePosition.y = e.motion.y;
                 // Check if the mouse is over any of the menu items
@@ -144,10 +149,10 @@ int Menu::showMenu(bool p, bool g, int s1,int s2, int pl,int w)
                 }
                 break;
 
-            case SDL_MOUSEBUTTONDOWN:
+            case MOUSE_BUTTON_DOWN:
                 switch (e.button.button)
                 {
-                case SDL_BUTTON_LEFT:
+                case BUTTON_LEFT:
                     //Check if mouse is over menu item
                     for(size_t i =0; i<tempItems.size(); i++)
                     {
@@ -155,6 +160,13 @@ int Menu::showMenu(bool p, bool g, int s1,int s2, int pl,int w)
                         {
                             menuRunning=false;
                             selectedItemIndex = i;
+                            if(selectedItemIndex==0)
+                                resumeMusic();
+                            if(selectedItemIndex==1)
+                            {
+                                rewindMusic();
+                                resumeMusic();
+                            }
                             return selectedItemIndex;
                         }
                     }
@@ -173,36 +185,37 @@ int Menu::showMenu(bool p, bool g, int s1,int s2, int pl,int w)
 
 void Menu::renderText(int fsize, std::string text, int y)
 {
-    font = TTF_OpenFont("Font/Gagalin.ttf", fsize);
+    font = openFont("Font/Gagalin.ttf", fsize);
     if (!font)
     {
-        std::cout << "Failed to load font: " << TTF_GetError() << std::endl;
+        std::cout << "Failed to load font: " << std::endl;
         return;
     }
 
-    textSurface = TTF_RenderText_Solid(font,text.c_str(), textColor);
-    textTexture = SDL_CreateTextureFromSurface(render, textSurface);
+    textSurface = renderTextSolid(font,text.c_str(), textColor);
+    textTexture = createTextureFromSurface(render, textSurface);
 
     textRect.x = (ScreenW-textSurface->w)/2;;
     textRect.y = y;
     textRect.w = textSurface->w;
     textRect.h = textSurface->h;
 
-    SDL_RenderCopy(render, textTexture,NULL, &textRect);
+    renderCopy(render, textTexture,NULL, &textRect);
 
-    SDL_FreeSurface(textSurface);
-    SDL_DestroyTexture(textTexture);
+    freeSurface(textSurface);
+    destroyTexture(textTexture);
 
-    TTF_CloseFont(font);
+    closeFont(font);
 }
 
 
 void Menu::renderMenu()
 {
 
-    SDL_SetRenderDrawColor(render, 0,0,0,255);
-    SDL_RenderClear(render);
+    setRenderDrawColor(render, 0,0,0,255);
+    renderClear(render);
     textRects.clear();
+    renderImage("images/Geometry.png",true);
     if(!paused && !gameOver)
     {
         renderImage("images/Space.gif",true);
@@ -253,12 +266,12 @@ void Menu::renderMenu()
         renderText(96, "PAUSED",  50);
     }
 
-    font = TTF_OpenFont("Font/Gagalin.ttf", 36);
+    font = openFont("Font/Gagalin.ttf", 36);
     for(size_t i=0; i<tempItems.size(); i++)
     {
 
-        textSurface = TTF_RenderText_Solid(font, tempItems[i].c_str(), int(i) == selectedItemIndex ? selectedColor:textColor);
-        textTexture = SDL_CreateTextureFromSurface(render, textSurface);
+        textSurface = renderTextSolid(font, tempItems[i].c_str(), int(i) == selectedItemIndex ? selectedColor:textColor);
+        textTexture = createTextureFromSurface(render, textSurface);
 
         int textWidth = textSurface->w;
         int textHeight = textSurface->h;
@@ -272,14 +285,14 @@ void Menu::renderMenu()
 
         textRects.push_back(textRect);
 
-        SDL_RenderCopy(render, textTexture, NULL, &textRect);
+        renderCopy(render, textTexture, NULL, &textRect);
 
-        SDL_FreeSurface(textSurface);
-        SDL_DestroyTexture(textTexture);
+        freeSurface(textSurface);
+        destroyTexture(textTexture);
 
     }
 
 
-    SDL_RenderPresent(render);
-    TTF_CloseFont(font);
+    renderPresent(render);
+    closeFont(font);
 }

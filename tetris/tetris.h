@@ -8,9 +8,9 @@
 #include <SDL2/SDL_mixer.h>
 #include <string>
 #include "mixer.h"
+#include "SDL.hpp"
 
-
-class Tetris
+class Tetris:public SDL
 {
 
 public:
@@ -42,8 +42,7 @@ public:
     bool init(const char* title);
     void nextTetrimino(int player_no, bool differentShape = false);
     void handleEvents();
-    void setPosRect(SDL_Rect& rect, int x=0, int y=0, int w=BlockW, int h = BlockH);
-   // void moveRectPos(SDL_Rect& rect,int x, int y);
+    void setPosRect(Rect& rect, int x=0, int y=0, int w=BlockW, int h = BlockH);
     void gameplay();
     void pauseMenuOptions(int);
     void updateRender();
@@ -56,19 +55,20 @@ public:
     mixer m1;
 
 private:
+    //SDL sdl;
     enum {ScreenW = 1920, ScreenH = 1080 };
     enum {BlockW = 40, BlockH = 40};
     enum {Lines = 20 +3, Cols = 48};
-    SDL_Window* window = NULL;
-    SDL_Renderer* render = NULL;
-    SDL_Texture* background = NULL, * blocks = NULL, *powerup_img = NULL, *small_blocks = NULL;
-    SDL_Texture* player1LevelTexture=NULL, * player2LevelTexture=NULL;
-    SDL_Surface* player1LevelSurface=NULL, *player2LevelSurface=NULL;
-    SDL_Rect srcR = {0,0, BlockW, BlockH}, destR= {0,0, BlockW, BlockH};
-    SDL_Rect playerRect;
-    SDL_Rect gameOverRect;
-    TTF_Font *font;
-    SDL_Color textColor = {0,0,0};
+    Window* window = NULL;
+    Renderer* render = NULL;
+    Texture* background = NULL, * blocks = NULL, *powerup_img = NULL, *small_blocks = NULL;
+    Texture* player1LevelTexture=NULL, * player2LevelTexture=NULL;
+    Surface* player1LevelSurface=NULL, *player2LevelSurface=NULL;
+    Rect srcR = {0,0, BlockW, BlockH}, destR= {0,0, BlockW, BlockH};
+    Rect playerRect;
+    Rect gameOverRect;
+    Font *font;
+    Color textColor = {0,0,0};
     bool running = false;
     bool paused = false;
     int showPauseMenu();
@@ -76,7 +76,7 @@ private:
     void resetGame();
     int gameOver();
     void gameOverMenuOptions(int);
-    bool isGameOver[2]= {false,false};
+    bool isGameOver[3]= {false,false,false};
 
     int field[Lines][Cols]= {0};
 
@@ -114,6 +114,7 @@ private:
     void showNextpiece(int player);
     void powerup(int player_no, int powerup_no);
     Uint32 startTime[3]= {0}, currentTime[3] = {0};
+    //SDL sdl;
 
 };
 

@@ -15,6 +15,6 @@ SDL Library: This project relies on the SDL library (version 2.0) for graphics a
 # Building and Running
 To build and run the Tetris game, follow these steps:
 
-1.**Clone the Repository**: Clone this repository to your local machine
-2.**Build the Game**: Open the project in your chosen C++ development environment (e.g., Code::Blocks, Visual Studio) and build it, ensuring that the SDL library is linked correctly.
-3.**Run the Game**: Once built successfully, run the game executable to start playing.
+1.**Clone the Repository**: Clone this repository to your local machine  
+2.**Build the Game**: Open the project in your chosen C++ development environment (e.g., Code::Blocks, Visual Studio) and build it, ensuring that the SDL library is linked correctly.  
+3.**Run the Game**: Once built successfully, run the game executable to start playing.  
